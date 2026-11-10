@@ -64,6 +64,17 @@
       "license": "Request permission or check dataset license before using GIS derivatives",
       "limitations": "Research reconstruction; not a ground-truth raster of individual 1609 features",
       "stage": "planned"
+    },
+    {
+      "id": "nys_nhd_flowlines_2020",
+      "role": "modern_reference",
+      "url": "https://gisservices.its.ny.gov/arcgis/rest/services/NYS_Hydrography/MapServer/15",
+      "provider": "USGS; New York State GIS Program Office",
+      "coverage": "New York State only; partial pilot coverage excludes New Jersey",
+      "format": "ArcGIS REST feature service with GeoJSON query support",
+      "license": "USGS NHD; NYSGPO credits. Check dataset terms before redistributing beyond analysis",
+      "limitations": "Updated modern NHD, may include artificial paths, four-dimensional source coordinate tuples and incomplete interstate coverage; NOT 1609",
+      "stage": "real_service_imported_and_verified_2026-11-10"
     }
   ]
 }

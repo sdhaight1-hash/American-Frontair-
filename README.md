@@ -57,7 +57,7 @@ na1609 fetch-modern-hydro --region regions/hudson_pilot.json --dry-run
 na1609 fetch-modern-hydro --region regions/hudson_pilot.json --raw data/raw/ny_nhd_flowlines.geojson --output data/derived/hudson_modern_flowlines.geojson
 ~~~
 
-This queries the official NYS GIS Program Office USGS NHD flowline layer using an explicit bounding envelope plus object-ID batches. Original source features remain in ignored data/raw; the clipped derivatives get hashed provenance manifests. **This is modern reference data, not a 1609 reconstruction.** NYS coverage omits the New Jersey portion of the pilot; its feature codes include artificial channels, canals and coastline reaches. See [historical water research](docs/historical_water_reconstruction.md) and [source candidates](catalog/hudson_historical_sources.json).
+This queries the official NYS GIS Program Office USGS NHD flowline layer using an explicit bounding envelope plus object-ID batches. Original source features remain in ignored data/raw; the clipped derivatives get hashed provenance manifests. **This is modern reference data, not a 1609 reconstruction.** NYS coverage omits the New Jersey portion of the pilot; its feature codes include artificial channels, canals and coastline reaches. See [real-data NHD QA](docs/hudson_modern_hydro_qa.md). See [historical water research](docs/historical_water_reconstruction.md) and [source candidates](catalog/hudson_historical_sources.json).
 
 ## Dataset design principles
 
