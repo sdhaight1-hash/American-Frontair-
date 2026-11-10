@@ -77,6 +77,30 @@ def _atomic_json(path: Path, value: dict) -> None:
         temp.unlink(missing_ok=True)
 
 
+def _geometry_2d(geometry: dict) -> tuple[dict, bool]:
+    """Drop measured/elevation ordinates for 2D clipping; keep raw source intact."""
+    kind = geometry.get("type")
+    if kind not in ("LineString", "MultiLineString"):
+        raise ValueError("NHD flowline must be linear geometry")
+    changed = False
+
+    def line(points):
+        nonlocal changed
+        output = []
+        for point in points:
+            if not isinstance(point, (list, tuple)) or len(point) < 2 or len(point) > 4:
+                raise ValueError("NHD coordinate must have 2-4 ordinates")
+            changed = changed or len(point) != 2
+            output.append(point[:2])
+        return output
+
+    c = geometry.get("coordinates")
+    if not isinstance(c, list):
+        raise ValueError("NHD geometry lacks coordinate array")
+    coords = line(c) if kind == "LineString" else [line(part) for part in c]
+    return {"type": kind, "coordinates": coords}, changed
+
+
 def create_modern_flowlines(region: dict, raw_path: Path, output: Path, *, get_json=None) -> dict:
     """Preserve uncut NHD features and write a derived clipped-only reference."""
     bbox = validate_bbox(region["bbox_wgs84"])
@@ -99,11 +123,14 @@ def create_modern_flowlines(region: dict, raw_path: Path, output: Path, *, get_j
     derived_features = []
     clipped_count = 0
     fcodes = {}
+    dimensionality_reduced = 0
     for feat in raw:
         geometry = feat.get("geometry")
         if not geometry:
             raise ValueError("NHD flowline missing geometry")
-        original = shape(geometry)
+        simplified_geometry, had_extra_ordinates = _geometry_2d(geometry)
+        dimensionality_reduced += int(had_extra_ordinates)
+        original = shape(simplified_geometry)
         if original.is_empty or not original.is_valid or original.geom_type not in ("LineString", "MultiLineString"):
             raise ValueError("NHD supplied invalid or non-linear flowline geometry")
         if not original.intersects(bounds):
@@ -141,6 +168,7 @@ def create_modern_flowlines(region: dict, raw_path: Path, output: Path, *, get_j
         "raw_feature_count": len(raw),
         "derived_feature_count": len(derived_features),
         "bbox_truncated_features": clipped_count,
+        "features_reduced_to_xy": dimensionality_reduced,
         "fcode_counts": dict(sorted(fcodes.items())),
         "source_object_ids_sha256": hashlib.sha256(json.dumps(ids).encode()).hexdigest(),
         "raw_file": raw_path.name,
@@ -152,6 +180,7 @@ def create_modern_flowlines(region: dict, raw_path: Path, output: Path, *, get_j
             "NYS service only covers New York State, not the New Jersey portion of the pilot.",
             "The flowline layer includes artificial paths, conduits, canals and coastline classes, not only natural rivers.",
             "Clipping can truncate network reaches at the bbox; adjacency/direction cannot be inferred from clipped endpoints.",
+            "Extra Z/M coordinate ordinates are preserved in raw source and removed from 2D derived geometries.",
             "No waterbody polygons, historical wetlands, or validated 1609 shoreline are included.",
         ],
     }

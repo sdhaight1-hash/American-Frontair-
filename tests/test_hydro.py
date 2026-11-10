@@ -93,3 +93,18 @@ def test_cli_dry_run_has_no_side_effects(tmp_path, capsys):
     assert data["dry_run"] is True
     assert data["source"].startswith("https://gisservices.its.ny.gov/")
     assert not (tmp_path / "data").exists()
+
+
+def test_measured_four_ordinate_nhd_coordinates_preserved_in_raw_and_reduced_in_derived(tmp_path):
+    def measured_service(url):
+        result = fake_service(url)
+        if "features" in result:
+            for feature in result["features"]:
+                feature["geometry"]["coordinates"] = [point + [12.0, 250.0] for point in feature["geometry"]["coordinates"]]
+        return result
+    raw = tmp_path / "measured.geojson"
+    output = tmp_path / "derived.geojson"
+    manifest = create_modern_flowlines(REGION, raw, output, get_json=measured_service)
+    assert manifest["features_reduced_to_xy"] == 2
+    assert len(json.loads(raw.read_text())["features"][0]["geometry"]["coordinates"][0]) == 4
+    assert len(json.loads(output.read_text())["features"][0]["geometry"]["coordinates"][0]) == 2

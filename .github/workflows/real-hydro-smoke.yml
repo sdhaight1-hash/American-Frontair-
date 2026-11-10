@@ -32,6 +32,7 @@ jobs:
           assert meta['is_1609_reconstruction'] is False
           assert meta['raw_feature_count'] >= meta['derived_feature_count'] > 0
           assert len(meta['raw_sha256']) == len(meta['output_sha256']) == 64
+          assert meta['features_reduced_to_xy'] >= 0
           assert all(shape(f['geometry']).is_valid for f in obj['features'])
           bounds = box(*meta['requested_bbox_wgs84'])
           assert all(bounds.covers(shape(f['geometry'])) for f in obj['features'])
