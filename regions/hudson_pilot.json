@@ -1,0 +1,6 @@
+{
+  "id": "lower_hudson_pilot",
+  "description": "Lower Hudson River and New York Harbor historical-reconstruction pilot; not a 1609 map by itself",
+  "target_year": 1609,
+  "bbox_wgs84": [-74.12, 40.64, -73.82, 40.90]
+}
