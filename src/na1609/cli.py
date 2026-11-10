@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from glob import glob
 from pathlib import Path
 
 from .download import download_tiles
@@ -30,7 +31,8 @@ def main(argv: list[str] | None = None) -> int:
         downloaded = download_tiles(region["bbox_wgs84"], args.destination, dry_run=args.dry_run)
         print(json.dumps({"downloaded": [str(x) for x in downloaded], "dry_run": args.dry_run}, indent=2))
     elif args.command == "ingest-dem":
-        result = create_reference_dem(args.input, args.output, region)
+        files = [Path(path) for pattern in args.input for path in sorted(glob(str(pattern)))]
+        result = create_reference_dem(files, args.output, region)
         print(json.dumps(result, indent=2))
     else:
         result = validate_features(args.input, year=region["target_year"], bbox=region["bbox_wgs84"])

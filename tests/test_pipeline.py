@@ -6,6 +6,7 @@ import pytest
 import rasterio
 from rasterio.transform import from_origin
 
+from na1609.cli import main
 from na1609.download import tile_urls
 from na1609.evidence import validate_features
 from na1609.geo import create_reference_dem, read_region, validate_bbox
@@ -107,3 +108,14 @@ def test_empty_evidence_collection_is_valid_but_not_evidence(tmp_path):
     file = tmp_path / "empty.geojson"
     _write_features(file, [])
     assert validate_features(file, year=1609, bbox=[-74.2, 40.6, -73.8, 40.9])["feature_count"] == 0
+
+
+def test_cli_expands_windows_style_unexpanded_glob(tmp_path):
+    src = tmp_path / "tiles"
+    src.mkdir()
+    _raster(src / "first.tif", -74.5, [[1, 2], [3, 4]])
+    reg = tmp_path / "region.json"
+    reg.write_text(json.dumps(region()))
+    dest = tmp_path / "output.tif"
+    assert main(["ingest-dem", "--region", str(reg), "--input", str(src / "*.tif"), "--output", str(dest)]) == 0
+    assert dest.exists()
