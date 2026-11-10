@@ -1,0 +1,51 @@
+{
+  "catalog_version": 1,
+  "research_region": "lower_hudson_pilot",
+  "target_year": 1609,
+  "items": [
+    {
+      "id": "nypl_maccoun_1909_manhattan_1609",
+      "title": "1609. The island of Manhattan (Mannahtin) at the time of its discovery showing its elevations, water-courses, marshes, and shore line",
+      "author": "Townsend MacCoun",
+      "date_created": 1909,
+      "time_depicted": 1609,
+      "nature": "retrospective cartographic reconstruction, not a contemporary survey",
+      "url": "https://old-digitalcollections.nypl.org/items/97ee6342-cec2-2699-e040-e00a18067566",
+      "rights_as_described_by_provider": "Free to use without restriction",
+      "geospatial_data_available": false,
+      "georeferenced": false,
+      "registration_error_m": null,
+      "status": "candidate_primary_map_for_digitization_not_yet_registered",
+      "warning": "The 1909 map's drawn 1609 features are historical hypotheses; control-point error and uncertainty need estimation."
+    },
+    {
+      "id": "welikia_research_reconstruction",
+      "title": "Welikia / Mannahatta historical ecology reconstruction",
+      "author": "Wildlife Conservation Society / Welikia project team",
+      "date_created": null,
+      "time_depicted": 1609,
+      "nature": "modern multidisciplinary ecological reconstruction for independent validation",
+      "url": "https://welikia.org/",
+      "rights_as_described_by_provider": "GIS data redistribution rights not yet established",
+      "geospatial_data_available": false,
+      "georeferenced": null,
+      "registration_error_m": null,
+      "status": "external_validation_candidate_permission_and_data_access_unverified",
+      "warning": "Do not silently import the interactive map or treat its estimates as direct surveys."
+    },
+    {
+      "id": "sanderson_mannahatta_waters_report",
+      "title": "Historical Ecology of Mannahatta's Waters",
+      "author": "Mannahatta Project researchers",
+      "date_created": null,
+      "time_depicted": 1609,
+      "nature": "technical report on historical ecological community and water mapping",
+      "url": "https://www.hudsonriver.org/wp-content/uploads/library/Sanderson_001_08A_final_report.pdf",
+      "rights_as_described_by_provider": "Research report; GIS-layer reuse rights need verification",
+      "geospatial_data_available": false,
+      "georeferenced": null,
+      "registration_error_m": null,
+      "status": "method_and_evidence_reference_not_digitized"
+    }
+  ]
+}

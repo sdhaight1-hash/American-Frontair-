@@ -49,6 +49,16 @@ na1609 check-evidence \
 
 A historical feature must have valid GeoJSON geometry within the region, a unique `feature_id`, `valid_years` including 1609, a `basis` (`historic_map`, `archaeology`, `paleoenvironment`, `document`, `model`, or `inference`), a confidence category, and at least one citation specifying `source_id` and a retrievable `locator` (e.g. archive folio or publication figure). The empty starter collection is syntactically valid but **constitutes no historical evidence**.
 
+
+### Acquire modern NHD reference flowlines (New York coverage only)
+
+~~~bash
+na1609 fetch-modern-hydro --region regions/hudson_pilot.json --dry-run
+na1609 fetch-modern-hydro --region regions/hudson_pilot.json --raw data/raw/ny_nhd_flowlines.geojson --output data/derived/hudson_modern_flowlines.geojson
+~~~
+
+This queries the official NYS GIS Program Office USGS NHD flowline layer using an explicit bounding envelope plus object-ID batches. Original source features remain in ignored data/raw; the clipped derivatives get hashed provenance manifests. **This is modern reference data, not a 1609 reconstruction.** NYS coverage omits the New Jersey portion of the pilot; its feature codes include artificial channels, canals and coastline reaches. See [historical water research](docs/historical_water_reconstruction.md) and [source candidates](catalog/hudson_historical_sources.json).
+
 ## Dataset design principles
 
 1. Preserve raw source bytes and processing checksums; do not modify originals.

@@ -9,6 +9,7 @@ from pathlib import Path
 from .download import download_tiles
 from .evidence import validate_features
 from .geo import create_reference_dem, read_region
+from .hydro import create_modern_flowlines, SERVICE
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -22,6 +23,11 @@ def main(argv: list[str] | None = None) -> int:
     ingest.add_argument("--region", type=Path, required=True)
     ingest.add_argument("--input", type=Path, nargs="+", required=True)
     ingest.add_argument("--output", type=Path, required=True)
+    hydro = sub.add_parser("fetch-modern-hydro", help="Query NYS/USGS NHD modern-reference flowlines")
+    hydro.add_argument("--region", type=Path, required=True)
+    hydro.add_argument("--raw", type=Path, default=Path("data/raw/ny_nhd_flowlines.geojson"))
+    hydro.add_argument("--output", type=Path, default=Path("data/derived/hudson_modern_flowlines.geojson"))
+    hydro.add_argument("--dry-run", action="store_true")
     evidence = sub.add_parser("check-evidence", help="Validate GeoJSON spatial historical evidence")
     evidence.add_argument("--region", type=Path, required=True)
     evidence.add_argument("--input", type=Path, required=True)
@@ -33,6 +39,12 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "ingest-dem":
         files = [Path(path) for pattern in args.input for path in sorted(glob(str(pattern)))]
         result = create_reference_dem(files, args.output, region)
+        print(json.dumps(result, indent=2))
+    elif args.command == "fetch-modern-hydro":
+        if args.dry_run:
+            result = {"source": SERVICE, "bbox_wgs84": region["bbox_wgs84"], "dry_run": True}
+        else:
+            result = create_modern_flowlines(region, args.raw, args.output)
         print(json.dumps(result, indent=2))
     else:
         result = validate_features(args.input, year=region["target_year"], bbox=region["bbox_wgs84"])
