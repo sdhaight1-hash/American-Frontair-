@@ -10,6 +10,7 @@ from .download import download_tiles
 from .evidence import validate_features
 from .geo import create_reference_dem, read_region
 from .hydro import create_modern_flowlines, SERVICE
+from .world_package import export_pilot, WorldPackage
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -31,6 +32,17 @@ def main(argv: list[str] | None = None) -> int:
     evidence = sub.add_parser("check-evidence", help="Validate GeoJSON spatial historical evidence")
     evidence.add_argument("--region", type=Path, required=True)
     evidence.add_argument("--input", type=Path, required=True)
+    package = sub.add_parser("export-pilot", help="Export offline simulation reference package (NOT a 1609 initial state)")
+    package.add_argument("--region", type=Path, required=True)
+    package.add_argument("--terrain", type=Path, required=True)
+    package.add_argument("--flowlines", type=Path, required=True)
+    package.add_argument("--evidence", type=Path, required=True)
+    package.add_argument("--output", type=Path, required=True)
+    query = sub.add_parser("query-pilot", help="Query exported offline package without GIS runtime")
+    query.add_argument("--region", type=Path, required=True)
+    query.add_argument("--package", type=Path, required=True)
+    query.add_argument("--lon", type=float, required=True)
+    query.add_argument("--lat", type=float, required=True)
     args = parser.parse_args(argv)
     region = read_region(args.region)
     if args.command == "fetch-dem":
@@ -45,6 +57,15 @@ def main(argv: list[str] | None = None) -> int:
             result = {"source": SERVICE, "bbox_wgs84": region["bbox_wgs84"], "dry_run": True}
         else:
             result = create_modern_flowlines(region, args.raw, args.output)
+        print(json.dumps(result, indent=2))
+    elif args.command == "export-pilot":
+        result = export_pilot(region, args.terrain, args.flowlines, args.evidence, args.output)
+        print(json.dumps(result, indent=2))
+    elif args.command == "query-pilot":
+        world = WorldPackage(args.package)
+        result = {"elevation_modern_reference_m": world.elevation_at(args.lon, args.lat),
+                  "nearby_bbox_candidate_reaches": len(world.reaches_in_bbox([args.lon - 0.001, args.lat - 0.001, args.lon + 0.001, args.lat + 0.001])),
+                  "is_1609_initial_state": world.manifest["is_1609_initial_state"]}
         print(json.dumps(result, indent=2))
     else:
         result = validate_features(args.input, year=region["target_year"], bbox=region["bbox_wgs84"])

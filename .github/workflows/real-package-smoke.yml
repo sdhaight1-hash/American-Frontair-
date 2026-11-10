@@ -1,0 +1,40 @@
+name: Real Hudson offline package smoke test
+on:
+  workflow_dispatch:
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -e '.[test]'
+      - run: na1609 fetch-dem --region regions/hudson_pilot.json --destination data/raw/copernicus
+      - run: na1609 ingest-dem --region regions/hudson_pilot.json --input 'data/raw/copernicus/*.tif' --output data/derived/hudson_modern_surface.tif
+      - run: na1609 fetch-modern-hydro --region regions/hudson_pilot.json --raw data/raw/ny_nhd_flowlines.geojson --output data/derived/hudson_modern_flowlines.geojson
+      - run: na1609 export-pilot --region regions/hudson_pilot.json --terrain data/derived/hudson_modern_surface.tif --flowlines data/derived/hudson_modern_flowlines.geojson --evidence data/historical/hudson_1609_evidence.geojson --output data/export/hudson-reference-world
+      - run: na1609 query-pilot --region regions/hudson_pilot.json --package data/export/hudson-reference-world --lon -74.02 --lat 40.72
+      - name: Verify package guard and data volume
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from na1609.world_package import WorldPackage
+          world = WorldPackage(Path('data/export/hudson-reference-world'))
+          assert not world.manifest['is_1609_initial_state']
+          assert len(world.reaches) > 100
+          try:
+              world.require_1609_initial_state()
+          except RuntimeError:
+              pass
+          else:
+              raise AssertionError('reference package incorrectly accepted as 1609 initial state')
+          print('Verified', len(world.reaches), 'modern-reference reach geometries')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hudson-game-reference-not-1609
+          path: data/export/hudson-reference-world/
+          retention-days: 7

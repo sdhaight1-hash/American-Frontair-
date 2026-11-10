@@ -1,6 +1,6 @@
 # American Frontair — North America 1609 data pipeline
 
-**Product goal:** an evidence-traceable **1609 world dataset designed specifically for video games and environmental simulations** across Canada, the United States and Mexico. The GIS processing pipeline is upstream infrastructure; the eventual output is a versioned, streamable, queryable world package with connected water networks, terrain, climate, soil, ecosystems, historical provenance, and a reproducible baseline for mutable simulations. It is not itself a renderer or game engine. See the [simulation dataset contract](docs/simulation_dataset_contract.md).
+This repository is the starting point for an evidence-traceable reconstruction of the **physical and ecological landscape of North America circa 1609** (Canada, United States, Mexico). It is deliberately **not** a renderer, game, nor a completed historical map.
 
 **Checkpoint 0 status:** one modern elevation reference importer, a historical evidence validation contract, source inventory, and automated tests. No 1609 geography has been manufactured or asserted. The included historical GeoJSON has zero features until supported evidence has been digitized.
 
@@ -49,15 +49,30 @@ na1609 check-evidence \
 
 A historical feature must have valid GeoJSON geometry within the region, a unique `feature_id`, `valid_years` including 1609, a `basis` (`historic_map`, `archaeology`, `paleoenvironment`, `document`, `model`, or `inference`), a confidence category, and at least one citation specifying `source_id` and a retrievable `locator` (e.g. archive folio or publication figure). The empty starter collection is syntactically valid but **constitutes no historical evidence**.
 
+### Acquire modern NHD flowlines (New York coverage only)
 
-### Acquire modern NHD reference flowlines (New York coverage only)
+```bash
+na1609 fetch-modern-hydro --region regions/hudson_pilot.json --dry-run
+na1609 fetch-modern-hydro --region regions/hudson_pilot.json \
+  --raw data/raw/ny_nhd_flowlines.geojson \
+  --output data/derived/hudson_modern_flowlines.geojson
+```
+
+This queries the official NYS GIS Program Office's USGS NHD flowline layer via ArcGIS REST using an explicit region envelope and object-ID pagination. The original returned source features are saved to the ignored `data/raw` directory; derived vectors are clipped to the pilot and written alongside a hashed provenance manifest. **These flowlines are modern references, not 1609.** This New York State source does not cover the New Jersey part of the pilot; missing NJ features cannot be assumed absent. Flowline classes include constructed waterways and artificial paths, not simply natural streams.
+
+See [historical water evidence gates](docs/historical_water_reconstruction.md) and the [historical source registry](catalog/hudson_historical_sources.json).
+
+
+### Export a game/simulation-readable reference package (not historical 1609 yet)
+
+After running the above DEM and NHD commands, create a deterministic offline package:
 
 ~~~bash
-na1609 fetch-modern-hydro --region regions/hudson_pilot.json --dry-run
-na1609 fetch-modern-hydro --region regions/hudson_pilot.json --raw data/raw/ny_nhd_flowlines.geojson --output data/derived/hudson_modern_flowlines.geojson
+na1609 export-pilot --region regions/hudson_pilot.json --terrain data/derived/hudson_modern_surface.tif --flowlines data/derived/hudson_modern_flowlines.geojson --evidence data/historical/hudson_1609_evidence.geojson --output data/export/hudson-reference-world
+na1609 query-pilot --region regions/hudson_pilot.json --package data/export/hudson-reference-world --lon -74.02 --lat 40.72
 ~~~
 
-This queries the official NYS GIS Program Office USGS NHD flowline layer using an explicit bounding envelope plus object-ID batches. Original source features remain in ignored data/raw; the clipped derivatives get hashed provenance manifests. **This is modern reference data, not a 1609 reconstruction.** NYS coverage omits the New Jersey portion of the pilot; its feature codes include artificial channels, canals and coastline reaches. See [real-data NHD QA](docs/hudson_modern_hydro_qa.md). See [historical water research](docs/historical_water_reconstruction.md) and [source candidates](catalog/hudson_historical_sources.json).
+The package contains binary little-endian float32 terrain, a GeoJSON-compatible river reach collection with stable NHD source IDs, dated evidence features, and a checksummed JSON manifest. A game runtime can read it **offline without GDAL**. The bundled Python `WorldPackage` provides a reference reader and explicitly refuses requests to initialize a fully historical 1609 world from modern sources. The water graph connectivity is **unresolved**, not fabricated; river geometry overlaps are currently bounding-box *candidates*, not proven crossings. See [simulation export format](docs/world_package_v1.md) and [end-goal contract](docs/simulation_dataset_contract.md).
 
 ## Dataset design principles
 
@@ -72,7 +87,7 @@ This queries the official NYS GIS Program Office USGS NHD flowline layer using a
 ## Next checkpoint
 
 1. Successfully ingest and inspect real Copernicus tiles with their edit/quality masks, replace DSM artifacts with regional bare-earth terrain where available, and validate against independent elevation samples.
-2. Add current river-network vectors for the Lower Hudson from HydroSHEDS v2 / authoritative regional hydrography and label them modern references.
+2. Ingest authoritative current NYS/USGS NHD flowlines and validate counts, clipping and source attribution; subsequently add cross-border NJ and HydroSHEDS v2 for independent comparison.
 3. Digitize and georeference genuinely sourced historical shorelines/wetlands from Welikia and archival documents, recording licensing, evidence dates, and registration error.
 4. Reconstruct historically constrained surface-water and floodplain features, retaining alternatives where evidence is insufficient.
 5. Add DPastCliM-NA temperature/precipitation baseline as modeled 1590–1629 climate, not measured 1609 weather.
