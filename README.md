@@ -1,6 +1,6 @@
 # American Frontair — North America 1609 data pipeline
 
-This repository is the starting point for an evidence-traceable reconstruction of the **physical and ecological landscape of North America circa 1609** (Canada, United States, Mexico). It is deliberately **not** a renderer, game, nor a completed historical map.
+**Product goal:** an evidence-traceable **1609 world dataset designed specifically for video games and environmental simulations** across Canada, the United States and Mexico. The GIS processing pipeline is upstream infrastructure; the eventual output is a versioned, streamable, queryable world package with connected water networks, terrain, climate, soil, ecosystems, historical provenance, and a reproducible baseline for mutable simulations. It is not itself a renderer or game engine. See the [simulation dataset contract](docs/simulation_dataset_contract.md).
 
 **Checkpoint 0 status:** one modern elevation reference importer, a historical evidence validation contract, source inventory, and automated tests. No 1609 geography has been manufactured or asserted. The included historical GeoJSON has zero features until supported evidence has been digitized.
 
