@@ -1,0 +1,52 @@
+name: Hudson real-data reference DEM smoke test
+on:
+  push:
+    branches:
+      - work/hudson-1609-data-foundation
+  workflow_dispatch:
+jobs:
+  real-dem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -e .
+      - name: Fetch two real Copernicus GLO-30 tiles
+        run: na1609 fetch-dem --region regions/hudson_pilot.json --destination data/raw/copernicus
+      - name: Mosaic and clip as MODERN reference (not 1609)
+        run: |
+          na1609 ingest-dem --region regions/hudson_pilot.json \
+            --input data/raw/copernicus/*.tif \
+            --output data/derived/hudson_modern_surface.tif
+      - name: Check reference raster and provenance
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import numpy as np
+          import rasterio
+          path = Path('data/derived/hudson_modern_surface.manifest.json')
+          manifest = json.loads(path.read_text())
+          assert manifest['role'] == 'modern_reference_only'
+          assert manifest['is_1609_reconstruction'] is False
+          assert len(manifest['source_files']) == 2
+          assert manifest['valid_pixel_fraction'] > 0.01
+          with rasterio.open('data/derived/hudson_modern_surface.tif') as raster:
+              assert raster.tags()['historical_reconstruction'] == 'false'
+              assert raster.count == 1
+              assert np.isfinite(raster.read(1)).any()
+          print('Source files:', len(manifest['source_files']))
+          print('Coverage:', manifest['valid_pixel_fraction'])
+          print('Dimensions:', manifest['sample_dimensions'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: hudson-modern-reference-not-1609
+          path: |
+            data/derived/hudson_modern_surface.tif
+            data/derived/hudson_modern_surface.manifest.json
+          retention-days: 7
