@@ -18,3 +18,8 @@ Acceptance for original checkpoint: unit tests pass; a 2-tile modern DEM clip ca
 ## Game/simulation export checkpoint
 
 Versioned offline **modern-reference-only** world package implemented and locally tested against real Hudson terrain and 934 modern NHD flowlines. `WorldPackage` supports elevation lookup and bounding-box candidate reach queries with SHA-256 verification; export is deterministic for identical inputs. Historical initial state is **false**; all 1609 hydrography, soils, climate, ecology, and verified graph topology remain unavailable. See `docs/world_package_v1.md`.
+
+
+## Directed network checkpoint — 2026-11-11
+
+Implemented an optional, separately namespaced USGS NHDPlusV2 graph importer; authoritative `FromNode`/`ToNode` adjacency, paginated download, buffered query context, explicit incomplete/unknown endpoints, source hashes, and offline traversal. Modern-only; not a 1609 reconstruction. The medium-resolution NHDPlusV2 graph does not automatically align with the older NYS NHD flowlines. Local regression suite passes; inspect the new real-network GitHub Actions smoke job before claiming successful live import.

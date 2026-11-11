@@ -12,11 +12,8 @@ import struct
 import tempfile
 from pathlib import Path
 
-import numpy as np
-import rasterio
-
-from .evidence import validate_features
-from .geo import sha256_file, validate_bbox
+from .runtime import sha256_file, validate_bbox
+from .network import RiverNetwork, SCHEMA as NETWORK_SCHEMA
 
 SCHEMA = "na1609.reference-package.v1"
 
@@ -41,11 +38,22 @@ def _verified_manifest(data_path: Path, expected_role: str, expected_layer: str,
     return source
 
 
-def export_pilot(region: dict, terrain: Path, flowlines: Path, evidence: Path, output: Path) -> dict:
+def export_pilot(region: dict, terrain: Path, flowlines: Path, evidence: Path, output: Path, *, network: Path | None = None) -> dict:
     """Export one offline region; never promote its modern data to historical state."""
+    import numpy as np
+    import rasterio
+    from .evidence import validate_features
+
     bbox = validate_bbox(region["bbox_wgs84"])
     dem_meta = _verified_manifest(terrain, "modern_reference_only", "terrain_elevation", region)
     water_meta = _verified_manifest(flowlines, "modern_reference_only", "flowlines", region)
+    graph = None
+    if network is not None:
+        _verified_manifest(network, "modern_reference_only", "nhdplusv2_network", region)
+        graph = json.loads(network.read_text(encoding="utf-8"))
+        if graph.get("schema") != NETWORK_SCHEMA or list(graph.get("bbox_wgs84", [])) != list(bbox):
+            raise ValueError("network source schema or geographic region mismatch")
+        RiverNetwork(graph)  # Verify reciprocity before exporting to the game.
     check = validate_features(evidence, year=region["target_year"], bbox=bbox)
     features = json.loads(evidence.read_text(encoding="utf-8"))["features"]
     source = json.loads(flowlines.read_text(encoding="utf-8"))
@@ -108,6 +116,8 @@ def export_pilot(region: dict, terrain: Path, flowlines: Path, evidence: Path, o
                 "sha256": sha256_file(temp / "terrain.f32"),
             }
         _write_json(temp / "reaches.json", {"schema_version": 1, "role": "modern_reference_only", "reaches": reaches})
+        if graph is not None:
+            _write_json(temp / "river_network.json", graph)
         _write_json(temp / "historical_evidence.json", {"schema_version": 1, "target_year": region["target_year"],
                                                      "features": sorted(features, key=lambda f: f["properties"]["feature_id"])})
         layers = {
@@ -117,6 +127,13 @@ def export_pilot(region: dict, terrain: Path, flowlines: Path, evidence: Path, o
                           "source_id": water_meta["source_id"], "coverage": "New York State subset; New Jersey not covered"},
             "historical_evidence": {"file": "historical_evidence.json", "sha256": sha256_file(temp / "historical_evidence.json"),
                                     "count": check["feature_count"], "completeness": "partial_or_missing"},
+            "river_network": {
+                "available": graph is not None,
+                "role": "modern_reference_only" if graph else None,
+                "source_id": "usgs_nhdplusv2" if graph else None,
+                **({"file": "river_network.json", "sha256": sha256_file(temp / "river_network.json"),
+                    "topology": "source_nodes_partial_buffered", "statistics": graph["statistics"]} if graph else {}),
+            },
             "climate": {"available": False}, "soils": {"available": False},
             "vegetation": {"available": False}, "historical_water_network": {"available": False},
         }
@@ -125,7 +142,8 @@ def export_pilot(region: dict, terrain: Path, flowlines: Path, evidence: Path, o
             "bbox_wgs84": list(bbox), "crs": "OGC:CRS84 (longitude, latitude)",
             "package_status": "modern_reference_only", "is_1609_initial_state": False,
             "layers": layers,
-            "source_manifests": {"terrain_sha256": sha256_file(terrain.with_suffix(".manifest.json")),
+            "source_manifests": {"network_sha256": sha256_file(network.with_suffix(".manifest.json")) if network else None,
+                                 "terrain_sha256": sha256_file(terrain.with_suffix(".manifest.json")),
                                  "flowlines_sha256": sha256_file(flowlines.with_suffix(".manifest.json")),
                                  "evidence_sha256": sha256_file(evidence)},
             "limitations": ["Do not use terrain or flowlines as 1609 conditions.",
@@ -155,6 +173,9 @@ class WorldPackage:
         if (self.root / t["file"]).stat().st_size != t["width"] * t["height"] * 4:
             raise ValueError("incorrect terrain sample count")
         self.reaches = json.loads((self.root / "reaches.json").read_text(encoding="utf-8"))["reaches"]
+        graph_layer = self.manifest["layers"].get("river_network", {})
+        self.river_network = (RiverNetwork(json.loads((self.root / graph_layer["file"]).read_text(encoding="utf-8")))
+                              if graph_layer.get("available") else None)
 
     def elevation_at(self, lon: float, lat: float) -> float | None:
         t = self.manifest["layers"]["terrain"]

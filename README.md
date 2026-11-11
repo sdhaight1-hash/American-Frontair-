@@ -93,3 +93,17 @@ The package contains binary little-endian float32 terrain, a GeoJSON-compatible 
 5. Add DPastCliM-NA temperature/precipitation baseline as modeled 1590–1629 climate, not measured 1609 weather.
 
 `catalog/sources.json` is a source research inventory, not proof that source files are presently incorporated. `data/raw` and `data/derived` are intentionally not committed.
+
+
+### USGS-directed NHDPlusV2 river graph (modern reference)
+
+The package can optionally include a separate, source-directed network using USGS NHDPlusV2 `FromNode`/`ToNode`; source and output are independently checksummed. This medium-resolution graph does **not** automatically correspond to the original 934 NHD flowlines.
+
+```bash
+na1609 fetch-network --region regions/hudson_pilot.json --dry-run
+na1609 fetch-network --region regions/hudson_pilot.json --raw data/raw/nhdplusv2_flowlines.geojson --output data/derived/hudson_nhdplusv2_network.json
+# Add --network data/derived/hudson_nhdplusv2_network.json to export-pilot.
+# Then use: na1609 trace-network --package data/export/hudson-reference-world --comid COMID
+```
+
+See [river network implementation and limitations](docs/river_network_v1.md). The graph is partial; genuine 1609 hydrology is still missing.

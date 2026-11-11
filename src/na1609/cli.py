@@ -10,6 +10,7 @@ from .download import download_tiles
 from .evidence import validate_features
 from .geo import create_reference_dem, read_region
 from .hydro import create_modern_flowlines, SERVICE
+from .network import create_network, RiverNetwork, SERVICE as NETWORK_SERVICE
 from .world_package import export_pilot, WorldPackage
 
 
@@ -29,6 +30,12 @@ def main(argv: list[str] | None = None) -> int:
     hydro.add_argument("--raw", type=Path, default=Path("data/raw/ny_nhd_flowlines.geojson"))
     hydro.add_argument("--output", type=Path, default=Path("data/derived/hudson_modern_flowlines.geojson"))
     hydro.add_argument("--dry-run", action="store_true")
+    network = sub.add_parser("fetch-network", help="Fetch NHDPlusV2 source-connected river network (modern reference)")
+    network.add_argument("--region", type=Path, required=True)
+    network.add_argument("--raw", type=Path, default=Path("data/raw/nhdplusv2_flowlines.geojson"))
+    network.add_argument("--output", type=Path, default=Path("data/derived/hudson_nhdplusv2_network.json"))
+    network.add_argument("--pad-degrees", type=float, default=0.05)
+    network.add_argument("--dry-run", action="store_true")
     evidence = sub.add_parser("check-evidence", help="Validate GeoJSON spatial historical evidence")
     evidence.add_argument("--region", type=Path, required=True)
     evidence.add_argument("--input", type=Path, required=True)
@@ -38,12 +45,23 @@ def main(argv: list[str] | None = None) -> int:
     package.add_argument("--flowlines", type=Path, required=True)
     package.add_argument("--evidence", type=Path, required=True)
     package.add_argument("--output", type=Path, required=True)
+    package.add_argument("--network", type=Path, help="Optional verified source-connected NHDPlusV2 graph")
     query = sub.add_parser("query-pilot", help="Query exported offline package without GIS runtime")
     query.add_argument("--region", type=Path, required=True)
     query.add_argument("--package", type=Path, required=True)
     query.add_argument("--lon", type=float, required=True)
     query.add_argument("--lat", type=float, required=True)
+    trace = sub.add_parser("trace-network", help="Trace upstream/downstream using source-confirmed node links offline")
+    trace.add_argument("--package", type=Path, required=True)
+    trace.add_argument("--comid", type=int, required=True)
+    trace.add_argument("--direction", choices=["upstream", "downstream"], default="downstream")
     args = parser.parse_args(argv)
+    if args.command == "trace-network":
+        world = WorldPackage(args.package)
+        if world.river_network is None:
+            raise ValueError("package does not include an NHDPlusV2 network")
+        print(json.dumps(world.river_network.trace(f"nhdplusv2:{args.comid}", direction=args.direction), indent=2))
+        return 0
     region = read_region(args.region)
     if args.command == "fetch-dem":
         downloaded = download_tiles(region["bbox_wgs84"], args.destination, dry_run=args.dry_run)
@@ -58,8 +76,15 @@ def main(argv: list[str] | None = None) -> int:
         else:
             result = create_modern_flowlines(region, args.raw, args.output)
         print(json.dumps(result, indent=2))
+    elif args.command == "fetch-network":
+        if args.dry_run:
+            result = {"source": NETWORK_SERVICE, "bbox_wgs84": region["bbox_wgs84"],
+                      "pad_degrees": args.pad_degrees, "dry_run": True}
+        else:
+            result = create_network(region, args.raw, args.output, pad=args.pad_degrees)
+        print(json.dumps(result, indent=2))
     elif args.command == "export-pilot":
-        result = export_pilot(region, args.terrain, args.flowlines, args.evidence, args.output)
+        result = export_pilot(region, args.terrain, args.flowlines, args.evidence, args.output, network=args.network)
         print(json.dumps(result, indent=2))
     elif args.command == "query-pilot":
         world = WorldPackage(args.package)

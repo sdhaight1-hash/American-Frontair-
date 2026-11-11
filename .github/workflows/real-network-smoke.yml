@@ -1,0 +1,48 @@
+name: Real NHDPlusV2 network integration
+on:
+  push:
+    branches: [work/hudson-1609-data-foundation]
+    paths:
+      - 'src/na1609/network.py'
+      - 'src/na1609/runtime.py'
+      - 'src/na1609/cli.py'
+      - '.github/workflows/real-network-smoke.yml'
+  workflow_dispatch:
+jobs:
+  import-and-trace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -e '.[test]'
+      - name: Ingest real USGS flowlines and construct directed graph
+        run: na1609 fetch-network --region regions/hudson_pilot.json --raw data/raw/nhdplusv2_flowlines.geojson --output data/derived/hudson_nhdplusv2_network.json
+      - name: Validate genuine source-based connectivity
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from na1609.network import RiverNetwork
+          graph = json.loads(Path('data/derived/hudson_nhdplusv2_network.json').read_text())
+          stats = graph['statistics']
+          assert graph['role'] == 'modern_reference_only'
+          assert graph['is_1609_reconstruction'] is False
+          assert stats['pilot_reach_count'] > 5
+          assert stats['directed_edge_count'] > 0, 'no USGS-confirmed node connectivity found'
+          network = RiverNetwork(graph)
+          linked = next(r['id'] for r in graph['reaches'] if r['inside_pilot'] and r['downstream_ids'])
+          trace = network.trace(linked)
+          assert len(trace['reach_ids']) >= 2
+          print('USGS NHDPlusV2 graph stats:', json.dumps(stats, sort_keys=True))
+          print('Representative traversal:', json.dumps(trace)[:1200])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hudson-nhdplusv2-modern-network-not-1609
+          path: |
+            data/derived/hudson_nhdplusv2_network.json
+            data/derived/hudson_nhdplusv2_network.manifest.json
+          retention-days: 7
