@@ -14,6 +14,7 @@ from .network import create_network, RiverNetwork, SERVICE as NETWORK_SERVICE
 from .world_package import export_pilot, WorldPackage, attach_historical_constraints
 from .historic_water import ingest_historical_water
 from .historical_constraints import load_constraints
+from .archival_map import acquire_maccoun_map, inspect_archival_map, IMAGE_URLS
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -63,6 +64,12 @@ def main(argv: list[str] | None = None) -> int:
     overlay.add_argument("--package", type=Path, required=True)
     overlay.add_argument("--input", type=Path, required=True)
     overlay.add_argument("--output", type=Path, required=True)
+    archive = sub.add_parser("fetch-archival-map", help="Archive NYPL MacCoun (1909) map scan; NOT georeferenced historical data")
+    archive.add_argument("--output", type=Path, required=True)
+    archive.add_argument("--quality", choices=sorted(IMAGE_URLS), default="original")
+    archive.add_argument("--dry-run", action="store_true")
+    inspect = sub.add_parser("inspect-archival-map", help="Verify archived historical image checksum and metadata")
+    inspect.add_argument("--input", type=Path, required=True)
     query = sub.add_parser("query-pilot", help="Query exported offline package without GIS runtime")
     query.add_argument("--region", type=Path, required=True)
     query.add_argument("--package", type=Path, required=True)
@@ -73,6 +80,13 @@ def main(argv: list[str] | None = None) -> int:
     trace.add_argument("--comid", type=int, required=True)
     trace.add_argument("--direction", choices=["upstream", "downstream"], default="downstream")
     args = parser.parse_args(argv)
+    if args.command == "fetch-archival-map":
+        result = {"url": IMAGE_URLS[args.quality], "quality": args.quality, "dry_run": True} if args.dry_run else acquire_maccoun_map(args.output, quality=args.quality)
+        print(json.dumps(result, indent=2))
+        return 0
+    if args.command == "inspect-archival-map":
+        print(json.dumps(inspect_archival_map(args.input), indent=2))
+        return 0
     if args.command == "trace-network":
         world = WorldPackage(args.package)
         if world.river_network is None:

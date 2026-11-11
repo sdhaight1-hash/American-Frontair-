@@ -1,0 +1,44 @@
+name: NYPL public-domain archival map smoke test
+on:
+  workflow_dispatch:
+  push:
+    branches: [work/hudson-1609-data-foundation]
+    paths:
+      - 'src/na1609/archival_map.py'
+      - 'src/na1609/cli.py'
+      - 'pyproject.toml'
+      - '.github/workflows/real-archival-map-smoke.yml'
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -e .
+      - name: Download authentic NYPL preview without treating it as historical geometry
+        run: na1609 fetch-archival-map --quality preview --output data/raw/nypl_maccoun_1909_preview.jpg
+      - name: Verify checksum, dimensions, source/depicted years and no georeferencing
+        run: |
+          na1609 inspect-archival-map --input data/raw/nypl_maccoun_1909_preview.jpg
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          m = json.loads(Path('data/raw/nypl_maccoun_1909_preview.manifest.json').read_text())
+          assert m['source_id'] == 'nypl_maccoun_1909_manhattan'
+          assert m['publication_year'] == 1909 and m['depicted_year'] == 1609
+          assert m['role'] == 'archival_source_scan_not_georeferenced'
+          assert m['eligible_for_precision_tracing_review'] is False
+          assert m['is_1609_reconstruction'] is False
+          print('Validated authentic archival preview; no georeferenced features claimed')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: nypl-maccoun-1909-original-source-preview-not-georeferenced
+          path: |
+            data/raw/nypl_maccoun_1909_preview.jpg
+            data/raw/nypl_maccoun_1909_preview.manifest.json
+          retention-days: 7

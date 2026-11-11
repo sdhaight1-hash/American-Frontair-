@@ -41,3 +41,10 @@ Implemented an optional, separately namespaced USGS NHDPlusV2 graph importer; au
 - Sources have publication years, precise archive/page locators, `retrospective_reconstruction` evidence classification, low confidence, and **null geometry**.
 - Export supports embedded constraints or a separately hashed additive overlay to already-verified game packages. Underlying modern terrain and rivers remain unchanged; offline reader can query the constraints.
 - This is **historical documentary knowledge, not historically validated 1609 geographic geometry**. Shoreline GIS and 1609 initial state remain unavailable. Source limitations and exact citations in `docs/first_archival_water_constraints.md`.
+
+## NYPL public-domain historical source acquisition (2026-11-11)
+
+- Added reproducible download/verification for Townsend MacCoun's 1909 retrospective map of Manhattan as depicted in 1609, with separate publication and depicted year, NYPL rights statement, byte-for-byte SHA-256, dimensions, and non-georeferenced source status.
+- Added fail-closed preservation (no overwrite, invalid raster rejection, no silent original-to-preview substitution, explicit low-resolution-preview flag).
+- Added independent preview acquisition GitHub workflow and nine synthetic-image regression tests. This is an archival **source**, not yet a historical shoreline, georeferenced map, or 1609 simulation state.
+- Before incorporating a single waterway polyline, we still need a detailed image source, independent georeferencing controls, actual feature tracing, and historical-position validation.

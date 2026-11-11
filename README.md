@@ -140,3 +140,14 @@ na1609 attach-historic-constraints --region regions/hudson_pilot.json \
 ```
 
 The hashed documentary layer exposes `WorldPackage.historical_water_constraint(id)` and the `query-pilot` summary reports the observation count. It preserves the entire modern reference package and **does not** mark the initial world as historically reconstructed. See [evidence, citation locators, source rights and limitations](docs/first_archival_water_constraints.md).
+
+### Archival image acquisition — 1909 retrospective map depicting 1609
+
+The `fetch-archival-map` command can preserve NYPL's public-domain MacCoun map scan with an immutable SHA-256 provenance manifest, while making **no claim of georeferencing or historical geometric accuracy**. The preview is **not** high enough resolution for detailed digitization; the original endpoint may be temporarily unavailable.
+
+```bash
+na1609 fetch-archival-map --quality preview --output data/raw/nypl_maccoun_1909_preview.jpg
+na1609 inspect-archival-map --input data/raw/nypl_maccoun_1909_preview.jpg
+```
+
+See [archival acquisition and georeferencing gates](docs/archival_map_acquisition.md). **No 1609 shoreline geometry has been incorporated yet.**
