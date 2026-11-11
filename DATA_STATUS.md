@@ -33,3 +33,11 @@ Implemented an optional, separately namespaced USGS NHDPlusV2 graph importer; au
 - Regression suite: **37 passing** synthetic/reference tests locally. Source acquisition/rights and real 1609 candidate creation remain incomplete.
 - New actual-source leads: NYPL MacCoun 1909 (retrospective public-domain scan); New Amsterdam History Center Mapbox 1609 shoreline/stream layers (redistribution rights unknown); Welikia GIS downloads advertised (contents/rights not verified).
 - **Historical candidate input features in repository: 0.** The importer does not manufacture any real historical features.
+
+## First historically sourced documentary constraints — November 11, 2026
+
+- **2** cited hypothetical 1609 stream features: Maiden Lane and William Street-area tributary, both unlocated in GIS coordinates.
+- **2** directional relationships: tributary -> Maiden Lane stream -> East River; 2 sources (NYPL MacCoun 1909, NYC archaeological report 2010).
+- Sources have publication years, precise archive/page locators, `retrospective_reconstruction` evidence classification, low confidence, and **null geometry**.
+- Export supports embedded constraints or a separately hashed additive overlay to already-verified game packages. Underlying modern terrain and rivers remain unchanged; offline reader can query the constraints.
+- This is **historical documentary knowledge, not historically validated 1609 geographic geometry**. Shoreline GIS and 1609 initial state remain unavailable. Source limitations and exact citations in `docs/first_archival_water_constraints.md`.

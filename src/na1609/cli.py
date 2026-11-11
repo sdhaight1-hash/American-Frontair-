@@ -11,8 +11,9 @@ from .evidence import validate_features
 from .geo import create_reference_dem, read_region
 from .hydro import create_modern_flowlines, SERVICE
 from .network import create_network, RiverNetwork, SERVICE as NETWORK_SERVICE
-from .world_package import export_pilot, WorldPackage
+from .world_package import export_pilot, WorldPackage, attach_historical_constraints
 from .historic_water import ingest_historical_water
+from .historical_constraints import load_constraints
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -53,6 +54,15 @@ def main(argv: list[str] | None = None) -> int:
     package.add_argument("--output", type=Path, required=True)
     package.add_argument("--network", type=Path, help="Optional verified source-connected NHDPlusV2 graph")
     package.add_argument("--historic-water", type=Path, help="Optional sourced historical candidate water, NOT confirmed 1609 state")
+    package.add_argument("--historic-constraints", type=Path, help="Optional documentary topology with NO location geometry")
+    check_constraints = sub.add_parser("check-historic-constraints", help="Validate documentary water relationships without inferring positions")
+    check_constraints.add_argument("--region", type=Path, required=True)
+    check_constraints.add_argument("--input", type=Path, required=True)
+    overlay = sub.add_parser("attach-historic-constraints", help="Append validated documentary hints to an existing reference world")
+    overlay.add_argument("--region", type=Path, required=True)
+    overlay.add_argument("--package", type=Path, required=True)
+    overlay.add_argument("--input", type=Path, required=True)
+    overlay.add_argument("--output", type=Path, required=True)
     query = sub.add_parser("query-pilot", help="Query exported offline package without GIS runtime")
     query.add_argument("--region", type=Path, required=True)
     query.add_argument("--package", type=Path, required=True)
@@ -95,13 +105,20 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(result, indent=2))
     elif args.command == "export-pilot":
         result = export_pilot(region, args.terrain, args.flowlines, args.evidence, args.output,
-                              network=args.network, historic_water=args.historic_water)
+                              network=args.network, historic_water=args.historic_water,
+                              historic_constraints=args.historic_constraints)
         print(json.dumps(result, indent=2))
+    elif args.command == "check-historic-constraints":
+        _, stats = load_constraints(args.input, region)
+        print(json.dumps(stats, indent=2))
+    elif args.command == "attach-historic-constraints":
+        print(json.dumps(attach_historical_constraints(region, args.package, args.input, args.output), indent=2))
     elif args.command == "query-pilot":
         world = WorldPackage(args.package)
         result = {"elevation_modern_reference_m": world.elevation_at(args.lon, args.lat),
                   "nearby_bbox_candidate_reaches": len(world.reaches_in_bbox([args.lon - 0.001, args.lat - 0.001, args.lon + 0.001, args.lat + 0.001])),
                   "is_1609_initial_state": world.manifest["is_1609_initial_state"],
+                  "historical_water_documentary_count": len(world.historical_water_constraints["features"]) if world.historical_water_constraints else 0,
                   "historical_water_candidate_count": len(world.historic_water_in_bbox([args.lon - 0.001, args.lat - 0.001, args.lon + 0.001, args.lat + 0.001]))}
         print(json.dumps(result, indent=2))
     else:

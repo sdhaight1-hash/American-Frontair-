@@ -122,3 +122,21 @@ na1609 ingest-historic-water --region regions/hudson_pilot.json \
 An optional `--historic-water data/derived/hudson_water_candidates.geojson` on `export-pilot` embeds the checksummed candidate layer. The offline reader exposes `historic_water_in_bbox()`. Input can be WGS84 vectors or map-pixel traces, with four fitted and two independent holdout control points, a bounded registration error, preserved source/hash and explicit redistribution rights. The importer rejects unsupported dates, geometry, citations and missing rights; even a successful import is only a **historical candidate** and does not set `is_1609_initial_state=true`.
 
 Historical data sources and the remaining field-work / rights gates are documented in [historical water candidate pipeline](docs/historical_water_candidate_pipeline.md). The historical-feature fixture in the automated tests is synthetic. The checked-in historical source GeoJSON is still empty; no real historical shoreline has been digitized or licensed yet.
+
+### Sourced documentary water topology (2026-11-11)
+
+This project now includes **two genuine, cited but non-georeferenced historical relationships** for Manhattan's reconstructed 1609 streams. They were derived from a 1909 retrospective map as discussed in a 2010 archaeological report, not observed in 1609. No river positions, stream widths, or shorelines have been invented.
+
+```bash
+na1609 check-historic-constraints --region regions/hudson_pilot.json --input data/historical/hudson_1609_documentary_constraints.json
+
+# Add to an already validated offline simulation reference package without downloading GIS sources again:
+na1609 attach-historic-constraints --region regions/hudson_pilot.json \
+  --package data/export/hudson-reference-world \
+  --input data/historical/hudson_1609_documentary_constraints.json \
+  --output data/export/hudson-reference-with-documentary-constraints
+
+# Alternatively: add --historic-constraints data/historical/hudson_1609_documentary_constraints.json to export-pilot.
+```
+
+The hashed documentary layer exposes `WorldPackage.historical_water_constraint(id)` and the `query-pilot` summary reports the observation count. It preserves the entire modern reference package and **does not** mark the initial world as historically reconstructed. See [evidence, citation locators, source rights and limitations](docs/first_archival_water_constraints.md).

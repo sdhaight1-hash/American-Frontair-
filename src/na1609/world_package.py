@@ -38,7 +38,7 @@ def _verified_manifest(data_path: Path, expected_role: str, expected_layer: str,
     return source
 
 
-def export_pilot(region: dict, terrain: Path, flowlines: Path, evidence: Path, output: Path, *, network: Path | None = None, historic_water: Path | None = None) -> dict:
+def export_pilot(region: dict, terrain: Path, flowlines: Path, evidence: Path, output: Path, *, network: Path | None = None, historic_water: Path | None = None, historic_constraints: Path | None = None) -> dict:
     """Export one offline region; never promote its modern data to historical state."""
     import numpy as np
     import rasterio
@@ -73,6 +73,11 @@ def export_pilot(region: dict, terrain: Path, flowlines: Path, evidence: Path, o
         for feature in candidate_geojson["features"]:
             if feature["properties"].get("review_status") != CANDIDATE_ROLE:
                 raise ValueError("historical water claims must remain explicitly candidate-only")
+    constraint_document, constraint_stats = (None, None)
+    if historic_constraints is not None:
+        from .historical_constraints import load_constraints
+        historic_constraints = Path(historic_constraints)
+        constraint_document, constraint_stats = load_constraints(historic_constraints, region)
     check = validate_features(evidence, year=region["target_year"], bbox=bbox)
     features = json.loads(evidence.read_text(encoding="utf-8"))["features"]
     source = json.loads(flowlines.read_text(encoding="utf-8"))
@@ -139,6 +144,8 @@ def export_pilot(region: dict, terrain: Path, flowlines: Path, evidence: Path, o
             _write_json(temp / "river_network.json", graph)
         if candidate_geojson is not None:
             _write_json(temp / "historic_water_candidates.geojson", candidate_geojson)
+        if constraint_document is not None:
+            _write_json(temp / "historical_water_constraints.json", constraint_document)
         _write_json(temp / "historical_evidence.json", {"schema_version": 1, "target_year": region["target_year"],
                                                      "features": sorted(features, key=lambda f: f["properties"]["feature_id"])})
         layers = {
@@ -162,6 +169,13 @@ def export_pilot(region: dict, terrain: Path, flowlines: Path, evidence: Path, o
                     "sha256": sha256_file(temp / "historic_water_candidates.geojson"),
                     "count": len(candidate_geojson["features"])} if candidate_geojson is not None else {}),
             },
+            "historical_water_constraints": {
+                "available": constraint_document is not None,
+                "role": "historical_documentary_constraints_not_georeferenced" if constraint_document else None,
+                **({"file": "historical_water_constraints.json",
+                    "sha256": sha256_file(temp / "historical_water_constraints.json"),
+                    "counts": constraint_stats} if constraint_document is not None else {}),
+            },
             "climate": {"available": False}, "soils": {"available": False},
             "vegetation": {"available": False}, "historical_water_network": {"available": False},
         }
@@ -174,7 +188,8 @@ def export_pilot(region: dict, terrain: Path, flowlines: Path, evidence: Path, o
                                  "terrain_sha256": sha256_file(terrain.with_suffix(".manifest.json")),
                                  "flowlines_sha256": sha256_file(flowlines.with_suffix(".manifest.json")),
                                  "evidence_sha256": sha256_file(evidence),
-                                 "historic_water_manifest_sha256": sha256_file(historic_water.with_suffix(".manifest.json")) if historic_water else None},
+                                 "historic_water_manifest_sha256": sha256_file(historic_water.with_suffix(".manifest.json")) if historic_water else None,
+                                 "historic_constraints_sha256": sha256_file(historic_constraints) if historic_constraints else None},
             "limitations": ["Do not use terrain or flowlines as 1609 conditions.",
                             "NHD identifiers are stable within source; downstream/upstream graph unresolved.",
                             "Target year describes research goal, not verified historical coverage."],
@@ -205,9 +220,19 @@ class WorldPackage:
         h_layer = self.manifest["layers"].get("historic_water_candidates", {})
         self.historic_water_candidates = (json.loads((self.root / h_layer["file"]).read_text(encoding="utf-8"))["features"]
                                            if h_layer.get("available") else [])
+        constraints_layer = self.manifest["layers"].get("historical_water_constraints", {})
+        self.historical_water_constraints = (json.loads((self.root / constraints_layer["file"]).read_text(encoding="utf-8"))
+                                             if constraints_layer.get("available") else None)
         graph_layer = self.manifest["layers"].get("river_network", {})
         self.river_network = (RiverNetwork(json.loads((self.root / graph_layer["file"]).read_text(encoding="utf-8")))
                               if graph_layer.get("available") else None)
+
+    def historical_water_constraint(self, feature_id: str) -> dict | None:
+        """Return evidence-based topological hints, never implied coordinates."""
+        if self.historical_water_constraints is None:
+            return None
+        return next((item for item in self.historical_water_constraints["features"]
+                     if item["id"] == feature_id), None)
 
     def elevation_at(self, lon: float, lat: float) -> float | None:
         t = self.manifest["layers"]["terrain"]
@@ -238,3 +263,50 @@ class WorldPackage:
     def require_1609_initial_state(self) -> None:
         if not self.manifest.get("is_1609_initial_state", False):
             raise RuntimeError("historical 1609 initial state is NOT available; package holds modern references only")
+
+
+def attach_historical_constraints(region: dict, source_package: Path, constraint_path: Path, output: Path) -> dict:
+    """Add sourced unlocated water constraints to an already verified offline world.
+
+    Does not modify terrain, rivers, or the original package, and does NOT
+    promote a modern reference into a completed 1609 historical initial state.
+    """
+    from .historical_constraints import load_constraints, ROLE
+
+    source = WorldPackage(source_package)  # Verify every existing package-file hash.
+    if source.manifest.get("region_id") != region["id"] or source.manifest.get("target_year") != region["target_year"]:
+        raise ValueError("input game package region/year mismatch")
+    if list(source.manifest.get("bbox_wgs84", [])) != list(region["bbox_wgs84"]):
+        raise ValueError("input game package bounds mismatch")
+    if source.manifest.get("is_1609_initial_state") is not False:
+        raise ValueError("documentary overlay is only valid for unfinished historical reference packages")
+    existing = source.manifest["layers"].get("historical_water_constraints", {})
+    if existing.get("available"):
+        raise ValueError("historical documentary constraints already installed; version explicitly instead")
+    constraints, stats = load_constraints(constraint_path, region)
+    output = Path(output)
+    if output.exists():
+        raise FileExistsError(f"refusing to overwrite existing world package: {output}")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temp = Path(tempfile.mkdtemp(prefix=".constraints-overlay-", dir=output.parent))
+    try:
+        for entry in source.root.iterdir():
+            if not entry.is_file():
+                raise ValueError("unexpected nested world package entry")
+            shutil.copy2(entry, temp / entry.name)
+        _write_json(temp / "historical_water_constraints.json", constraints)
+        manifest = json.loads((temp / "manifest.json").read_text(encoding="utf-8"))
+        manifest["layers"]["historical_water_constraints"] = {
+            "available": True, "role": ROLE, "counts": stats,
+            "file": "historical_water_constraints.json",
+            "sha256": sha256_file(temp / "historical_water_constraints.json"),
+        }
+        manifest.setdefault("source_manifests", {})["historic_constraints_sha256"] = sha256_file(constraint_path)
+        manifest["is_1609_initial_state"] = False
+        _write_json(temp / "manifest.json", manifest)
+        WorldPackage(temp)  # End-to-end integrity check before publishing.
+        temp.rename(output)
+        return manifest
+    finally:
+        if temp.exists():
+            shutil.rmtree(temp)
