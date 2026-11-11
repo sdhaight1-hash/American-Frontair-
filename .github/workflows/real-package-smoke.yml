@@ -1,5 +1,9 @@
 name: Real Hudson offline package smoke test
 on:
+  push:
+    branches: [work/hudson-1609-data-foundation]
+    paths:
+      - '.github/workflows/real-package-smoke.yml'
   workflow_dispatch:
 jobs:
   export:

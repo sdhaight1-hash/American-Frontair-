@@ -107,3 +107,6 @@ na1609 fetch-network --region regions/hudson_pilot.json --raw data/raw/nhdplusv2
 ```
 
 See [river network implementation and limitations](docs/river_network_v1.md). The graph is partial; genuine 1609 hydrology is still missing.
+
+
+**Verified network results:** See [Hudson real NHDPlusV2 QA](docs/hudson_modern_nhdplusv2_qa.md) (424 buffered reaches, 428 source-confirmed edges). This is deliberately a **partial modern reference graph**, not a verified 1609 drainage network.

@@ -23,3 +23,8 @@ Versioned offline **modern-reference-only** world package implemented and locall
 ## Directed network checkpoint — 2026-11-11
 
 Implemented an optional, separately namespaced USGS NHDPlusV2 graph importer; authoritative `FromNode`/`ToNode` adjacency, paginated download, buffered query context, explicit incomplete/unknown endpoints, source hashes, and offline traversal. Modern-only; not a 1609 reconstruction. The medium-resolution NHDPlusV2 graph does not automatically align with the older NYS NHD flowlines. Local regression suite passes; inspect the new real-network GitHub Actions smoke job before claiming successful live import.
+
+
+### Measured NHDPlusV2 integration result
+
+[Live CI run 43087894777](https://github.com/sdhaight1-hash/American-Frontair-/actions/runs/43087894777) succeeded: 424 buffered USGS flowlines, 243 in pilot, 428 directed links from authoritative node IDs, 26 links across pilot boundary, 74 unresolved upstream ends, and 12 unresolved downstream ends. A real offline world package combining 934 NHD features and 424 separate NHDPlusV2 graph reaches was verified locally; still explicitly modern-reference-only. See `docs/hudson_modern_nhdplusv2_qa.md`.
