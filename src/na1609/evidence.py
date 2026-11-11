@@ -15,6 +15,11 @@ VALID_CONFIDENCE = {"high", "medium", "low", "unknown"}
 def validate_features(path: Path, *, year: int, bbox: list[float]) -> dict:
     """Accept only documented, spatially valid features relevant to target year."""
     obj = json.loads(path.read_text(encoding="utf-8"))
+    return validate_collection(obj, year=year, bbox=bbox)
+
+
+def validate_collection(obj: dict, *, year: int, bbox: list[float]) -> dict:
+    """Validate an in-memory historical feature collection before writing to disk."""
     if obj.get("type") != "FeatureCollection" or not isinstance(obj.get("features"), list):
         raise ValueError("expected GeoJSON FeatureCollection")
     extent = box(*validate_bbox(bbox))

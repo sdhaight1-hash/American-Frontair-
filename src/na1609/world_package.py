@@ -38,7 +38,7 @@ def _verified_manifest(data_path: Path, expected_role: str, expected_layer: str,
     return source
 
 
-def export_pilot(region: dict, terrain: Path, flowlines: Path, evidence: Path, output: Path, *, network: Path | None = None) -> dict:
+def export_pilot(region: dict, terrain: Path, flowlines: Path, evidence: Path, output: Path, *, network: Path | None = None, historic_water: Path | None = None) -> dict:
     """Export one offline region; never promote its modern data to historical state."""
     import numpy as np
     import rasterio
@@ -54,6 +54,25 @@ def export_pilot(region: dict, terrain: Path, flowlines: Path, evidence: Path, o
         if graph.get("schema") != NETWORK_SCHEMA or list(graph.get("bbox_wgs84", [])) != list(bbox):
             raise ValueError("network source schema or geographic region mismatch")
         RiverNetwork(graph)  # Verify reciprocity before exporting to the game.
+    candidate_geojson = None
+    if historic_water is not None:
+        from .historic_water import CANDIDATE_ROLE
+        historic_water = Path(historic_water)
+        candidate_manifest = json.loads(historic_water.with_suffix(".manifest.json").read_text(encoding="utf-8"))
+        if (candidate_manifest.get("role") != CANDIDATE_ROLE or
+                candidate_manifest.get("is_1609_reconstruction") is not False or
+                candidate_manifest.get("historical_target_year") != region["target_year"] or
+                candidate_manifest.get("region_id") != region["id"] or
+                list(candidate_manifest.get("requested_bbox_wgs84", [])) != list(bbox) or
+                candidate_manifest.get("output_sha256") != sha256_file(historic_water)):
+            raise ValueError("historic water candidate manifest or SHA-256 invalid")
+        validate_features(historic_water, year=region["target_year"], bbox=bbox)
+        candidate_geojson = json.loads(historic_water.read_text(encoding="utf-8"))
+        if len(candidate_geojson["features"]) != candidate_manifest.get("feature_count"):
+            raise ValueError("historic water candidate feature count mismatch")
+        for feature in candidate_geojson["features"]:
+            if feature["properties"].get("review_status") != CANDIDATE_ROLE:
+                raise ValueError("historical water claims must remain explicitly candidate-only")
     check = validate_features(evidence, year=region["target_year"], bbox=bbox)
     features = json.loads(evidence.read_text(encoding="utf-8"))["features"]
     source = json.loads(flowlines.read_text(encoding="utf-8"))
@@ -118,6 +137,8 @@ def export_pilot(region: dict, terrain: Path, flowlines: Path, evidence: Path, o
         _write_json(temp / "reaches.json", {"schema_version": 1, "role": "modern_reference_only", "reaches": reaches})
         if graph is not None:
             _write_json(temp / "river_network.json", graph)
+        if candidate_geojson is not None:
+            _write_json(temp / "historic_water_candidates.geojson", candidate_geojson)
         _write_json(temp / "historical_evidence.json", {"schema_version": 1, "target_year": region["target_year"],
                                                      "features": sorted(features, key=lambda f: f["properties"]["feature_id"])})
         layers = {
@@ -134,6 +155,13 @@ def export_pilot(region: dict, terrain: Path, flowlines: Path, evidence: Path, o
                 **({"file": "river_network.json", "sha256": sha256_file(temp / "river_network.json"),
                     "topology": "source_nodes_partial_buffered", "statistics": graph["statistics"]} if graph else {}),
             },
+            "historic_water_candidates": {
+                "available": candidate_geojson is not None,
+                "role": "historical_candidate_not_validated" if candidate_geojson is not None else None,
+                **({"file": "historic_water_candidates.geojson",
+                    "sha256": sha256_file(temp / "historic_water_candidates.geojson"),
+                    "count": len(candidate_geojson["features"])} if candidate_geojson is not None else {}),
+            },
             "climate": {"available": False}, "soils": {"available": False},
             "vegetation": {"available": False}, "historical_water_network": {"available": False},
         }
@@ -145,7 +173,8 @@ def export_pilot(region: dict, terrain: Path, flowlines: Path, evidence: Path, o
             "source_manifests": {"network_sha256": sha256_file(network.with_suffix(".manifest.json")) if network else None,
                                  "terrain_sha256": sha256_file(terrain.with_suffix(".manifest.json")),
                                  "flowlines_sha256": sha256_file(flowlines.with_suffix(".manifest.json")),
-                                 "evidence_sha256": sha256_file(evidence)},
+                                 "evidence_sha256": sha256_file(evidence),
+                                 "historic_water_manifest_sha256": sha256_file(historic_water.with_suffix(".manifest.json")) if historic_water else None},
             "limitations": ["Do not use terrain or flowlines as 1609 conditions.",
                             "NHD identifiers are stable within source; downstream/upstream graph unresolved.",
                             "Target year describes research goal, not verified historical coverage."],
@@ -173,6 +202,9 @@ class WorldPackage:
         if (self.root / t["file"]).stat().st_size != t["width"] * t["height"] * 4:
             raise ValueError("incorrect terrain sample count")
         self.reaches = json.loads((self.root / "reaches.json").read_text(encoding="utf-8"))["reaches"]
+        h_layer = self.manifest["layers"].get("historic_water_candidates", {})
+        self.historic_water_candidates = (json.loads((self.root / h_layer["file"]).read_text(encoding="utf-8"))["features"]
+                                           if h_layer.get("available") else [])
         graph_layer = self.manifest["layers"].get("river_network", {})
         self.river_network = (RiverNetwork(json.loads((self.root / graph_layer["file"]).read_text(encoding="utf-8")))
                               if graph_layer.get("available") else None)
@@ -192,6 +224,16 @@ class WorldPackage:
         west, south, east, north = validate_bbox(bbox)
         return [r for r in self.reaches if r["bbox_wgs84"][0] <= east and r["bbox_wgs84"][2] >= west
                 and r["bbox_wgs84"][1] <= north and r["bbox_wgs84"][3] >= south]
+
+    def historic_water_in_bbox(self, bbox: list[float]) -> list[dict]:
+        """Bounding-box prefilter for sourced historical hypotheses (stdlib-only)."""
+        west, south, east, north = validate_bbox(bbox)
+        result = []
+        for feature in self.historic_water_candidates:
+            x0, y0, x1, y1 = feature["properties"]["bbox_wgs84"]
+            if x0 <= east and x1 >= west and y0 <= north and y1 >= south:
+                result.append(feature)
+        return result
 
     def require_1609_initial_state(self) -> None:
         if not self.manifest.get("is_1609_initial_state", False):

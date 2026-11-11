@@ -12,6 +12,7 @@ from .geo import create_reference_dem, read_region
 from .hydro import create_modern_flowlines, SERVICE
 from .network import create_network, RiverNetwork, SERVICE as NETWORK_SERVICE
 from .world_package import export_pilot, WorldPackage
+from .historic_water import ingest_historical_water
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -36,6 +37,11 @@ def main(argv: list[str] | None = None) -> int:
     network.add_argument("--output", type=Path, default=Path("data/derived/hudson_nhdplusv2_network.json"))
     network.add_argument("--pad-degrees", type=float, default=0.05)
     network.add_argument("--dry-run", action="store_true")
+    historical = sub.add_parser("ingest-historic-water", help="Import cited 1609 water candidate geometry; never marks game world complete")
+    historical.add_argument("--region", type=Path, required=True)
+    historical.add_argument("--input", type=Path, required=True, help="Digitized source GeoJSON (image pixels or WGS84)")
+    historical.add_argument("--metadata", type=Path, required=True, help="Source date, rights, controls, uncertainty, citations")
+    historical.add_argument("--output", type=Path, required=True)
     evidence = sub.add_parser("check-evidence", help="Validate GeoJSON spatial historical evidence")
     evidence.add_argument("--region", type=Path, required=True)
     evidence.add_argument("--input", type=Path, required=True)
@@ -46,6 +52,7 @@ def main(argv: list[str] | None = None) -> int:
     package.add_argument("--evidence", type=Path, required=True)
     package.add_argument("--output", type=Path, required=True)
     package.add_argument("--network", type=Path, help="Optional verified source-connected NHDPlusV2 graph")
+    package.add_argument("--historic-water", type=Path, help="Optional sourced historical candidate water, NOT confirmed 1609 state")
     query = sub.add_parser("query-pilot", help="Query exported offline package without GIS runtime")
     query.add_argument("--region", type=Path, required=True)
     query.add_argument("--package", type=Path, required=True)
@@ -83,14 +90,19 @@ def main(argv: list[str] | None = None) -> int:
         else:
             result = create_network(region, args.raw, args.output, pad=args.pad_degrees)
         print(json.dumps(result, indent=2))
+    elif args.command == "ingest-historic-water":
+        result = ingest_historical_water(region, args.input, args.metadata, args.output)
+        print(json.dumps(result, indent=2))
     elif args.command == "export-pilot":
-        result = export_pilot(region, args.terrain, args.flowlines, args.evidence, args.output, network=args.network)
+        result = export_pilot(region, args.terrain, args.flowlines, args.evidence, args.output,
+                              network=args.network, historic_water=args.historic_water)
         print(json.dumps(result, indent=2))
     elif args.command == "query-pilot":
         world = WorldPackage(args.package)
         result = {"elevation_modern_reference_m": world.elevation_at(args.lon, args.lat),
                   "nearby_bbox_candidate_reaches": len(world.reaches_in_bbox([args.lon - 0.001, args.lat - 0.001, args.lon + 0.001, args.lat + 0.001])),
-                  "is_1609_initial_state": world.manifest["is_1609_initial_state"]}
+                  "is_1609_initial_state": world.manifest["is_1609_initial_state"],
+                  "historical_water_candidate_count": len(world.historic_water_in_bbox([args.lon - 0.001, args.lat - 0.001, args.lon + 0.001, args.lat + 0.001]))}
         print(json.dumps(result, indent=2))
     else:
         result = validate_features(args.input, year=region["target_year"], bbox=region["bbox_wgs84"])

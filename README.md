@@ -108,5 +108,17 @@ na1609 fetch-network --region regions/hudson_pilot.json --raw data/raw/nhdplusv2
 
 See [river network implementation and limitations](docs/river_network_v1.md). The graph is partial; genuine 1609 hydrology is still missing.
 
+### Historical water evidence candidate pipeline (2026-11-11)
 
-**Verified network results:** See [Hudson real NHDPlusV2 QA](docs/hudson_modern_nhdplusv2_qa.md) (424 buffered reaches, 428 source-confirmed edges). This is deliberately a **partial modern reference graph**, not a verified 1609 drainage network.
+We now support sourced historical GIS features **without claiming that they constitute a complete 1609 world**:
+
+```bash
+na1609 ingest-historic-water --region regions/hudson_pilot.json \
+  --input path/to/rights-cleared-digitized-source.geojson \
+  --metadata path/to/source-and-georeferencing.json \
+  --output data/derived/hudson_water_candidates.geojson
+```
+
+An optional `--historic-water data/derived/hudson_water_candidates.geojson` on `export-pilot` embeds the checksummed candidate layer. The offline reader exposes `historic_water_in_bbox()`. Input can be WGS84 vectors or map-pixel traces, with four fitted and two independent holdout control points, a bounded registration error, preserved source/hash and explicit redistribution rights. The importer rejects unsupported dates, geometry, citations and missing rights; even a successful import is only a **historical candidate** and does not set `is_1609_initial_state=true`.
+
+Historical data sources and the remaining field-work / rights gates are documented in [historical water candidate pipeline](docs/historical_water_candidate_pipeline.md). The historical-feature fixture in the automated tests is synthetic. The checked-in historical source GeoJSON is still empty; no real historical shoreline has been digitized or licensed yet.

@@ -24,7 +24,12 @@ Versioned offline **modern-reference-only** world package implemented and locall
 
 Implemented an optional, separately namespaced USGS NHDPlusV2 graph importer; authoritative `FromNode`/`ToNode` adjacency, paginated download, buffered query context, explicit incomplete/unknown endpoints, source hashes, and offline traversal. Modern-only; not a 1609 reconstruction. The medium-resolution NHDPlusV2 graph does not automatically align with the older NYS NHD flowlines. Local regression suite passes; inspect the new real-network GitHub Actions smoke job before claiming successful live import.
 
+## First historical-water candidate processing checkpoint — 2026-11-11
 
-### Measured NHDPlusV2 integration result
-
-[Live CI run 43087894777](https://github.com/sdhaight1-hash/American-Frontair-/actions/runs/43087894777) succeeded: 424 buffered USGS flowlines, 243 in pilot, 428 directed links from authoritative node IDs, 26 links across pilot boundary, 74 unresolved upstream ends, and 12 unresolved downstream ends. A real offline world package combining 934 NHD features and 424 separate NHDPlusV2 graph reaches was verified locally; still explicitly modern-reference-only. See `docs/hudson_modern_nhdplusv2_qa.md`.
+- Implemented sourced WGS84 vector / image-pixel digitized water importer (shorelines, streams, wetlands, ponds).
+- Historical target period, map publication year, citations, source rights assertions, spatial uncertainty and raw-data SHA-256 are recorded separately.
+- Map controls use an EPSG:32618 affine fit with >=4 fit and >=2 **holdout** GCPs; an error ceiling rejects bad registration; it cannot prove historic accuracy of the map itself.
+- Optional candidate layer integrates into offline world package without adding a runtime GIS dependency, while `is_1609_initial_state=false` remains mandatory.
+- Regression suite: **37 passing** synthetic/reference tests locally. Source acquisition/rights and real 1609 candidate creation remain incomplete.
+- New actual-source leads: NYPL MacCoun 1909 (retrospective public-domain scan); New Amsterdam History Center Mapbox 1609 shoreline/stream layers (redistribution rights unknown); Welikia GIS downloads advertised (contents/rights not verified).
+- **Historical candidate input features in repository: 0.** The importer does not manufacture any real historical features.

@@ -46,6 +46,44 @@
       "georeferenced": null,
       "registration_error_m": null,
       "status": "method_and_evidence_reference_not_digitized"
+    },
+    {
+      "id": "nahc_map_1609_shoreline_streams",
+      "title": "New Amsterdam History Center Manahatta shoreline and circa-1600 stream layers",
+      "author": "New Amsterdam History Center historical mapping project",
+      "date_created": null,
+      "time_depicted": 1609,
+      "nature": "published map viewer vector tile layers; original observation date and cartographic methodology unverified",
+      "url": "https://nahc-mapping.org/mappingNY/",
+      "source_code_url": "https://nahc-mapping.org/mappingNY/timeline/js/layersList.js",
+      "mapbox_sources": {
+        "shoreline": "mapbox://mapny.a0lop49m",
+        "streams": "mapbox://mapny.a9o6nugn"
+      },
+      "source_layer_names": {
+        "shoreline": "manahatta_shoreline-1xswf8",
+        "streams": "manahatta_area_streams-a2x39f"
+      },
+      "rights_as_described_by_provider": "No demonstrated license for extraction/redistribution of vector tiles",
+      "geospatial_data_available": true,
+      "georeferenced": true,
+      "registration_error_m": null,
+      "status": "identified_on_public_viewer_not_ingested_rights_unverified",
+      "warning": "Do not extract/distribute Mapbox map tiles as game dataset without explicit permission and provenance review."
+    },
+    {
+      "id": "welikia_public_download_listing",
+      "title": "Welikia downloadable geographic data and DEMs",
+      "author": "New York Botanical Garden Urban Conservation team",
+      "date_created": null,
+      "time_depicted": 1609,
+      "nature": "research project downloadable spatial data advertised on resources page; contents not inspected",
+      "url": "https://www.welikia.org/resources",
+      "rights_as_described_by_provider": "No geospatial reuse/redistribution license verified",
+      "geospatial_data_available": true,
+      "georeferenced": null,
+      "registration_error_m": null,
+      "status": "download_listing_verified_archives_uninspected_rights_pending"
     }
   ]
 }
