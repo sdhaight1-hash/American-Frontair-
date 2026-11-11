@@ -1,0 +1,254 @@
+{
+  "type": "FeatureCollection",
+  "pixel_coordinate_system": {
+    "origin": "top-left",
+    "x": "right",
+    "y": "down",
+    "units": "scan_pixels",
+    "width": 7004,
+    "height": 1970
+  },
+  "source_image_id": "ps_map_cd3_36",
+  "source_id": "nypl_maccoun_1909_manhattan",
+  "source_image_sha256": "57fc9c31128bfbfd1fc9928f6e6b295940001c22faa04b8cd196e5229caca00a",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              750,
+              1102
+            ],
+            [
+              752,
+              1109
+            ],
+            [
+              746,
+              1111
+            ],
+            [
+              747,
+              1145
+            ],
+            [
+              752,
+              1148
+            ],
+            [
+              753,
+              1152
+            ],
+            [
+              767,
+              1153
+            ],
+            [
+              768,
+              1157
+            ],
+            [
+              778,
+              1156
+            ],
+            [
+              782,
+              1158
+            ],
+            [
+              798,
+              1153
+            ],
+            [
+              804,
+              1149
+            ],
+            [
+              803,
+              1144
+            ],
+            [
+              810,
+              1135
+            ],
+            [
+              806,
+              1119
+            ],
+            [
+              799,
+              1119
+            ],
+            [
+              798,
+              1112
+            ],
+            [
+              787,
+              1106
+            ],
+            [
+              780,
+              1109
+            ],
+            [
+              768,
+              1107
+            ],
+            [
+              766,
+              1098
+            ],
+            [
+              762,
+              1096
+            ],
+            [
+              750,
+              1102
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "feature_id": "nypl-maccoun-1909-pond-image-01",
+        "feature_type": "pond",
+        "name": "mapped inland pond basin near historic Collect Pond area (larger eastern body)",
+        "valid_years": [
+          1609,
+          1609
+        ],
+        "source_publication_year": 1909,
+        "basis": "historic_map",
+        "confidence": "low",
+        "source_coordinate_space": "image_pixels_y_down",
+        "pixel_boundary_uncertainty_px": 3.0,
+        "evidence": [
+          {
+            "source_id": "nypl_maccoun_1909_manhattan",
+            "locator": "NYPL image ps_map_cd3_36; mapped blue inland ponds near New Bowery/Lafayette Street"
+          }
+        ],
+        "review_status": "source_pixel_trace_not_georeferenced",
+        "trace_method": "Color-mask assisted hand-reviewed contour, HSV H95-130/S20-255/V50-240, 3x3 closing twice, simplify 1.4 px; visual QA required",
+        "interpretation": "Illustrated features on a 1909 retrospective map of 1609, not observed 1609 pond boundaries"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              719,
+              1092
+            ],
+            [
+              710,
+              1092
+            ],
+            [
+              704,
+              1103
+            ],
+            [
+              699,
+              1107
+            ],
+            [
+              698,
+              1118
+            ],
+            [
+              693,
+              1129
+            ],
+            [
+              693,
+              1133
+            ],
+            [
+              696,
+              1135
+            ],
+            [
+              699,
+              1143
+            ],
+            [
+              706,
+              1142
+            ],
+            [
+              713,
+              1137
+            ],
+            [
+              710,
+              1136
+            ],
+            [
+              711,
+              1131
+            ],
+            [
+              715,
+              1131
+            ],
+            [
+              720,
+              1136
+            ],
+            [
+              728,
+              1134
+            ],
+            [
+              731,
+              1114
+            ],
+            [
+              724,
+              1104
+            ],
+            [
+              723,
+              1095
+            ],
+            [
+              719,
+              1092
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "feature_id": "nypl-maccoun-1909-pond-image-02",
+        "feature_type": "pond",
+        "name": "mapped inland pond basin near historic Collect Pond area (western body)",
+        "valid_years": [
+          1609,
+          1609
+        ],
+        "source_publication_year": 1909,
+        "basis": "historic_map",
+        "confidence": "low",
+        "source_coordinate_space": "image_pixels_y_down",
+        "pixel_boundary_uncertainty_px": 3.0,
+        "evidence": [
+          {
+            "source_id": "nypl_maccoun_1909_manhattan",
+            "locator": "NYPL image ps_map_cd3_36; mapped blue inland ponds near New Bowery/Lafayette Street"
+          }
+        ],
+        "review_status": "source_pixel_trace_not_georeferenced",
+        "trace_method": "Color-mask assisted hand-reviewed contour, HSV H95-130/S20-255/V50-240, 3x3 closing twice, simplify 1.4 px; visual QA required",
+        "interpretation": "Illustrated features on a 1909 retrospective map of 1609, not observed 1609 pond boundaries"
+      }
+    }
+  ]
+}

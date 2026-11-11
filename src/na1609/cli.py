@@ -15,6 +15,7 @@ from .world_package import export_pilot, WorldPackage, attach_historical_constra
 from .historic_water import ingest_historical_water
 from .historical_constraints import load_constraints
 from .archival_map import acquire_maccoun_map, inspect_archival_map, IMAGE_URLS
+from .pixel_traces import preview_pixel_traces, validate_pixel_traces
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -70,6 +71,10 @@ def main(argv: list[str] | None = None) -> int:
     archive.add_argument("--dry-run", action="store_true")
     inspect = sub.add_parser("inspect-archival-map", help="Verify archived historical image checksum and metadata")
     inspect.add_argument("--input", type=Path, required=True)
+    pixel = sub.add_parser("inspect-pixel-traces", help="Validate sourced map-pixel outlines; never infer WGS84 coordinates")
+    pixel.add_argument("--image", type=Path, required=True)
+    pixel.add_argument("--traces", type=Path, required=True)
+    pixel.add_argument("--preview", type=Path, help="Optional cropped visual QA PNG")
     query = sub.add_parser("query-pilot", help="Query exported offline package without GIS runtime")
     query.add_argument("--region", type=Path, required=True)
     query.add_argument("--package", type=Path, required=True)
@@ -86,6 +91,10 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "inspect-archival-map":
         print(json.dumps(inspect_archival_map(args.input), indent=2))
+        return 0
+    if args.command == "inspect-pixel-traces":
+        result = preview_pixel_traces(args.image, args.traces, args.preview) if args.preview else validate_pixel_traces(args.image, args.traces)
+        print(json.dumps(result, indent=2))
         return 0
     if args.command == "trace-network":
         world = WorldPackage(args.package)

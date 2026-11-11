@@ -5,6 +5,8 @@ on:
     branches: [work/hudson-1609-data-foundation]
     paths:
       - 'src/na1609/archival_map.py'
+      - 'src/na1609/pixel_traces.py'
+      - 'data/historical/source_pixels/**'
       - 'src/na1609/cli.py'
       - 'pyproject.toml'
       - '.github/workflows/real-archival-map-smoke.yml'
@@ -34,13 +36,23 @@ jobs:
           assert m['is_1609_reconstruction'] is False
           print('Validated authentic archival preview; no georeferenced features claimed')
           PY
-      - name: Attempt full-resolution NYPL scan (non-blocking availability probe)
+      - name: Attempt independently retrieved full-resolution scan (non-blocking external availability probe)
         run: |
           if na1609 fetch-archival-map --quality original --output data/raw/nypl_maccoun_1909_original.jpg; then
             na1609 inspect-archival-map --input data/raw/nypl_maccoun_1909_original.jpg
-            echo 'Original NYPL source retrieved and verified'
+            echo 'NYPL full-resolution image retrieved and verified'
           else
             echo 'NYPL original image endpoint unavailable; no fallback or high-resolution claim' >&2
+          fi
+      - name: Validate traced pond symbols against authentic original scan (only when original was available)
+        run: |
+          if test -f data/raw/nypl_maccoun_1909_original.jpg; then
+            na1609 inspect-pixel-traces \
+              --image data/raw/nypl_maccoun_1909_original.jpg \
+              --traces data/historical/source_pixels/maccoun_ponds_1909.geojson \
+              --preview data/derived/maccoun_ponds_pixel_review.png
+          else
+            echo 'Original archive endpoint unavailable; pixel trace was not validated in this run' >&2
           fi
       - uses: actions/upload-artifact@v4
         if: success()
@@ -51,4 +63,5 @@ jobs:
             data/raw/nypl_maccoun_1909_preview.manifest.json
             data/raw/nypl_maccoun_1909_original.jpg
             data/raw/nypl_maccoun_1909_original.manifest.json
+            data/derived/maccoun_ponds_pixel_review.png
           retention-days: 7

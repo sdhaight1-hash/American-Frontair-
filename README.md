@@ -153,3 +153,13 @@ na1609 inspect-archival-map --input data/raw/nypl_maccoun_1909_preview.jpg
 See [archival acquisition and georeferencing gates](docs/archival_map_acquisition.md). **No 1609 shoreline geometry has been incorporated yet.**
 
 **Original scan now verified:** A real **7004×1970** original-resolution NYPL MacCoun 1909 map was acquired in [GitHub Actions](https://github.com/sdhaight1-hash/American-Frontair-/actions/runs/43102314464). See [original scan QA](docs/nypl_maccoun_scan_qa.md) and the deliberately incomplete [source-specific georeferencing template](data/historical/nypl_maccoun_1909_registration_template.json). The historical water importer checks scan SHA-256 **and actual raster dimensions** before using image-pixel controls.
+
+### Real historical cartography — first traced pond symbols (not georeferenced)
+
+Two outlines have been digitized in the **native 7004×1970 pixel coordinate frame** of NYPL's authenticated 1909 MacCoun map of the purported 1609 landscape. The contours and source-image hash are versioned at `data/historical/source_pixels/maccoun_ponds_1909.geojson`. Verify with:
+
+```bash
+na1609 inspect-pixel-traces --image data/raw/nypl/nypl_maccoun_1909_original.jpg --traces data/historical/source_pixels/maccoun_ponds_1909.geojson --preview data/derived/maccoun_ponds_pixel_review.png
+```
+
+This is archival digitization **not 1609 world coordinates**. No georeferencing, water levels or historical world geometry is claimed. The original high-resolution map is fetched separately, not committed. See [MacCoun pond trace QA and remaining gates](docs/maccoun_pond_source_pixel_trace.md).

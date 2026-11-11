@@ -58,3 +58,9 @@ Implemented an optional, separately namespaced USGS NHDPlusV2 graph importer; au
 
 - Original MacCoun 1909 NYPL scan downloaded and verified by CI: **7004×1970 JPEG**, 2,159,834 bytes, SHA-256 `57fc9c31128bfbfd1fc9928f6e6b295940001c22faa04b8cd196e5229caca00a`.
 - Registration template created with verified image identity and empty controls; **no fictitious georeferencing or historic geometry**. Image-pixel importer now requires exact source hash and matching actual image dimensions.
+
+## Archival pond pixel traces — 2026-11-11
+
+- Two pond-symbol polygons have been extracted/reviewed on the authentic 7004x1970 MacCoun 1909 map scan depicting 1609. Shapes are in *image pixels only*, with bound original-image SHA-256 and source location citation. Raster scan is not committed.
+- `inspect-pixel-traces` checks authenticated original-image identity, image bounds, polygon validity, dates, and citations and can render a reviewer overlay.
+- **No geographic 1609 geometry yet**. Ground-control-point registration and independent holdout checks are required before producing geo/terrain/world data. See `docs/maccoun_pond_source_pixel_trace.md`.
