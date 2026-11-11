@@ -1,0 +1,80 @@
+{
+  "catalog_version": 1,
+  "historical_target_year": 1609,
+  "sources": [
+    {
+      "id": "copernicus_dem_glo30",
+      "role": "modern_reference",
+      "format": "COG GeoTIFF",
+      "url": "https://registry.opendata.aws/copernicus-dem/",
+      "access": "Public AWS S3 bucket: copernicus-dem-30m",
+      "coverage": "Global land, subject to published tile restrictions",
+      "resolution": "1 arc-second, approximately 30 m",
+      "license": "Copernicus DEM license; attribution required, verify terms before redistribution",
+      "limitations": "Modern DSM; buildings and tree canopy may remain; NOT a 1609 terrain model",
+      "stage": "supported_by_importer"
+    },
+    {
+      "id": "hydrosheds_v2",
+      "role": "modern_reference",
+      "url": "https://www.hydrosheds.org/news/hydrosheds-v2-for-the-americas",
+      "coverage": "Americas, released 2026",
+      "resolution": "1 arc-second raster; vector rivers and basins",
+      "license": "Review exact product terms; DLR metadata indicates CC-BY-4.0",
+      "limitations": "Modern rivers informed by mapped flow paths; not 1609 channel geometry",
+      "stage": "planned"
+    },
+    {
+      "id": "dpastclim_na",
+      "role": "paleoclimate_model",
+      "url": "https://doi.org/10.5281/zenodo.17245353",
+      "paper": "https://www.nature.com/articles/s41597-026-07572-x",
+      "coverage": "North America; check edge coverage against Mexico before processing",
+      "resolution": "0.2 degree gridded modeled monthly temperature and precipitation",
+      "license": "Verify the specific Zenodo record and each dataset file license",
+      "limitations": "Modeled multi-century reconstruction, not observed weather for 1609",
+      "stage": "planned"
+    },
+    {
+      "id": "soilgrids",
+      "role": "modern_reference",
+      "url": "https://isric.org/explore/soilgrids",
+      "coverage": "Global land",
+      "resolution": "250 m modeled soil properties",
+      "license": "Verify applicable SoilGrids dataset terms",
+      "limitations": "Modern modeled properties do not equal soil conditions in 1609",
+      "stage": "planned"
+    },
+    {
+      "id": "usgs_geology_north_america",
+      "role": "geologic_reference",
+      "url": "https://www.usgs.gov/publications/database-north-america-tapestry-time-and-terrain-map",
+      "coverage": "North America",
+      "resolution": "Generalized 1:8,000,000 scale",
+      "license": "Check dataset component attribution and redistribution obligations",
+      "limitations": "Too coarse for local rock outcrops; supplement regional geological maps",
+      "stage": "planned"
+    },
+    {
+      "id": "welikia_1609",
+      "role": "independent_historical_reference",
+      "url": "https://www.welikia.org/about-this-project",
+      "coverage": "Manhattan / New York City environs",
+      "resolution": "Research-specific; access and data rights must be confirmed",
+      "license": "Request permission or check dataset license before using GIS derivatives",
+      "limitations": "Research reconstruction; not a ground-truth raster of individual 1609 features",
+      "stage": "planned"
+    },
+    {
+      "id": "usgs_nhdplusv2",
+      "role": "modern_reference",
+      "format": "OGC API Features GeoJSON",
+      "url": "https://api.water.usgs.gov/fabric/pygeoapi/collections/nhdflowline_network",
+      "coverage": "United States NHDPlus V2 network where served",
+      "resolution": "Medium resolution NHDPlusV2 flowlines",
+      "license": "USGS public domain (check applicable service terms and component attributes)",
+      "limitations": "FlowDir and FromNode/ToNode support directed graph, but incomplete without non-geometric PlusFlow table and cannot represent 1609 waterways",
+      "stage": "implemented_importer_and_local_tests"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+name: Real Hudson offline package smoke test
+on:
+  push:
+    branches: [work/hudson-1609-data-foundation]
+    paths:
+      - '.github/workflows/real-package-smoke.yml'
+      - 'src/na1609/historical_constraints.py'
+      - 'src/na1609/world_package.py'
+      - 'data/historical/hudson_1609_documentary_constraints.json'
+  workflow_dispatch:
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -e '.[test]'
+      - run: na1609 fetch-dem --region regions/hudson_pilot.json --destination data/raw/copernicus
+      - run: na1609 ingest-dem --region regions/hudson_pilot.json --input 'data/raw/copernicus/*.tif' --output data/derived/hudson_modern_surface.tif
+      - run: na1609 fetch-modern-hydro --region regions/hudson_pilot.json --raw data/raw/ny_nhd_flowlines.geojson --output data/derived/hudson_modern_flowlines.geojson
+      - run: na1609 fetch-network --region regions/hudson_pilot.json --raw data/raw/nhdplusv2_flowlines.geojson --output data/derived/hudson_nhdplusv2_network.json
+      - run: na1609 export-pilot --region regions/hudson_pilot.json --terrain data/derived/hudson_modern_surface.tif --flowlines data/derived/hudson_modern_flowlines.geojson --network data/derived/hudson_nhdplusv2_network.json --evidence data/historical/hudson_1609_evidence.geojson --historic-constraints data/historical/hudson_1609_documentary_constraints.json --output data/export/hudson-reference-world
+      - run: na1609 query-pilot --region regions/hudson_pilot.json --package data/export/hudson-reference-world --lon -74.02 --lat 40.72
+      - name: Verify package guard and data volume
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from na1609.world_package import WorldPackage
+          world = WorldPackage(Path('data/export/hudson-reference-world'))
+          assert not world.manifest['is_1609_initial_state']
+          assert len(world.historical_water_constraints['features']) == 2
+          assert world.historical_water_constraint('william_street_tributary')['geometry'] is None
+          assert len(world.reaches) > 100
+          assert world.river_network is not None
+          stats = world.river_network.network['statistics']
+          assert stats['directed_edge_count'] > 0
+          start = next(x['id'] for x in world.river_network.reaches.values() if x['downstream_ids'])
+          assert len(world.river_network.trace(start)['reach_ids']) >= 2
+          try:
+              world.require_1609_initial_state()
+          except RuntimeError:
+              pass
+          else:
+              raise AssertionError('reference package incorrectly accepted as 1609 initial state')
+          print('Verified', len(world.reaches), 'modern-reference reach geometries')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hudson-game-reference-not-1609
+          path: data/export/hudson-reference-world/
+          retention-days: 7

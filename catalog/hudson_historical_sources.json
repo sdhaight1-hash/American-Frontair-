@@ -1,0 +1,89 @@
+{
+  "catalog_version": 1,
+  "research_region": "lower_hudson_pilot",
+  "target_year": 1609,
+  "items": [
+    {
+      "id": "nypl_maccoun_1909_manhattan_1609",
+      "title": "1609. The island of Manhattan (Mannahtin) at the time of its discovery showing its elevations, water-courses, marshes, and shore line",
+      "author": "Townsend MacCoun",
+      "date_created": 1909,
+      "time_depicted": 1609,
+      "nature": "retrospective cartographic reconstruction, not a contemporary survey",
+      "url": "https://old-digitalcollections.nypl.org/items/97ee6342-cec2-2699-e040-e00a18067566",
+      "rights_as_described_by_provider": "Free to use without restriction",
+      "geospatial_data_available": false,
+      "georeferenced": false,
+      "registration_error_m": null,
+      "status": "candidate_primary_map_for_digitization_not_yet_registered",
+      "warning": "The 1909 map's drawn 1609 features are historical hypotheses; control-point error and uncertainty need estimation."
+    },
+    {
+      "id": "welikia_research_reconstruction",
+      "title": "Welikia / Mannahatta historical ecology reconstruction",
+      "author": "Wildlife Conservation Society / Welikia project team",
+      "date_created": null,
+      "time_depicted": 1609,
+      "nature": "modern multidisciplinary ecological reconstruction for independent validation",
+      "url": "https://welikia.org/",
+      "rights_as_described_by_provider": "GIS data redistribution rights not yet established",
+      "geospatial_data_available": false,
+      "georeferenced": null,
+      "registration_error_m": null,
+      "status": "external_validation_candidate_permission_and_data_access_unverified",
+      "warning": "Do not silently import the interactive map or treat its estimates as direct surveys."
+    },
+    {
+      "id": "sanderson_mannahatta_waters_report",
+      "title": "Historical Ecology of Mannahatta's Waters",
+      "author": "Mannahatta Project researchers",
+      "date_created": null,
+      "time_depicted": 1609,
+      "nature": "technical report on historical ecological community and water mapping",
+      "url": "https://www.hudsonriver.org/wp-content/uploads/library/Sanderson_001_08A_final_report.pdf",
+      "rights_as_described_by_provider": "Research report; GIS-layer reuse rights need verification",
+      "geospatial_data_available": false,
+      "georeferenced": null,
+      "registration_error_m": null,
+      "status": "method_and_evidence_reference_not_digitized"
+    },
+    {
+      "id": "nahc_map_1609_shoreline_streams",
+      "title": "New Amsterdam History Center Manahatta shoreline and circa-1600 stream layers",
+      "author": "New Amsterdam History Center historical mapping project",
+      "date_created": null,
+      "time_depicted": 1609,
+      "nature": "published map viewer vector tile layers; original observation date and cartographic methodology unverified",
+      "url": "https://nahc-mapping.org/mappingNY/",
+      "source_code_url": "https://nahc-mapping.org/mappingNY/timeline/js/layersList.js",
+      "mapbox_sources": {
+        "shoreline": "mapbox://mapny.a0lop49m",
+        "streams": "mapbox://mapny.a9o6nugn"
+      },
+      "source_layer_names": {
+        "shoreline": "manahatta_shoreline-1xswf8",
+        "streams": "manahatta_area_streams-a2x39f"
+      },
+      "rights_as_described_by_provider": "No demonstrated license for extraction/redistribution of vector tiles",
+      "geospatial_data_available": true,
+      "georeferenced": true,
+      "registration_error_m": null,
+      "status": "identified_on_public_viewer_not_ingested_rights_unverified",
+      "warning": "Do not extract/distribute Mapbox map tiles as game dataset without explicit permission and provenance review."
+    },
+    {
+      "id": "welikia_public_download_listing",
+      "title": "Welikia downloadable geographic data and DEMs",
+      "author": "New York Botanical Garden Urban Conservation team",
+      "date_created": null,
+      "time_depicted": 1609,
+      "nature": "research project downloadable spatial data advertised on resources page; contents not inspected",
+      "url": "https://www.welikia.org/resources",
+      "rights_as_described_by_provider": "No geospatial reuse/redistribution license verified",
+      "geospatial_data_available": true,
+      "georeferenced": null,
+      "registration_error_m": null,
+      "status": "download_listing_verified_archives_uninspected_rights_pending"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "source_id": "nypl_maccoun_1909_manhattan",
+  "source_url": "https://old-digitalcollections.nypl.org/items/97ee6342-cec2-2699-e040-e00a18067566",
+  "source_publication_year": 1909,
+  "historical_interval": [1609, 1609],
+  "evidence_locator": "NYPL image ps_map_cd3_36, Townsend MacCoun 1909 retrospective Manhattan 1609 map",
+  "rights_basis": "NYPL states public domain under United States law; non-US and redistribution conditions must be reviewed before game export",
+  "redistribution_allowed": false,
+  "coordinate_space": "image_pixels",
+  "source_image": "../raw/nypl/nypl_maccoun_1909_original.jpg",
+  "source_image_sha256": "57fc9c31128bfbfd1fc9928f6e6b295940001c22faa04b8cd196e5229caca00a",
+  "image_width": 7004,
+  "image_height": 1970,
+  "horizontal_uncertainty_m": null,
+  "control_points": [],
+  "max_holdout_error_m": null,
+  "research_status": "registration_not_attempted; no independently surveyed controls or historical vectors included"
+}

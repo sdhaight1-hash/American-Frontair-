@@ -1,0 +1,50 @@
+name: Hudson modern NHD hydrography smoke test
+on:
+  push:
+    branches:
+      - work/hudson-1609-data-foundation
+  workflow_dispatch:
+jobs:
+  real-hydro:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -e '.[test]'
+      - name: Fetch and clip official NYS/USGS modern NHD flowlines
+        run: |
+          na1609 fetch-modern-hydro --region regions/hudson_pilot.json \
+            --raw data/raw/ny_nhd_flowlines.geojson \
+            --output data/derived/hudson_modern_flowlines.geojson
+      - name: Validate real vector geometry and provenance
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from shapely.geometry import box, shape
+          base = Path('data/derived/hudson_modern_flowlines.geojson')
+          meta = json.loads(base.with_suffix('.manifest.json').read_text())
+          obj = json.loads(base.read_text())
+          assert meta['role'] == 'modern_reference_only'
+          assert meta['is_1609_reconstruction'] is False
+          assert meta['raw_feature_count'] >= meta['derived_feature_count'] > 0
+          assert len(meta['raw_sha256']) == len(meta['output_sha256']) == 64
+          assert meta['features_reduced_to_xy'] >= 0
+          assert all(shape(f['geometry']).is_valid for f in obj['features'])
+          bounds = box(*meta['requested_bbox_wgs84'])
+          assert all(bounds.covers(shape(f['geometry'])) for f in obj['features'])
+          assert all(f['properties']['dataset_role'] == 'modern_reference_only' for f in obj['features'])
+          print(json.dumps({k:meta[k] for k in ('raw_feature_count','derived_feature_count','bbox_truncated_features','fcode_counts')},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: hudson-modern-nhd-flowlines-not-1609
+          path: |
+            data/raw/ny_nhd_flowlines.geojson
+            data/derived/hudson_modern_flowlines.geojson
+            data/derived/hudson_modern_flowlines.manifest.json
+          retention-days: 7

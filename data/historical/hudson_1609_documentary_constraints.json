@@ -1,0 +1,50 @@
+{
+  "schema": "na1609.water-constraints.v1",
+  "region_id": "lower_hudson_pilot",
+  "target_year": 1609,
+  "role": "historical_documentary_constraints_not_georeferenced",
+  "coordinate_status": "not_georeferenced",
+  "named_external_waterbodies": ["east_river"],
+  "sources": [
+    {
+      "id": "nyc_lpc_corbin_2010_p9",
+      "url": "https://s-media.nyc.gov/agencies/lpc/arch_reports/1237.pdf",
+      "publication_year": 2010,
+      "locator": "printed page 9: Topography of the Site; PDF page index 12 (zero-based)",
+      "source_kind": "archaeological_report_discussing_retrospective_maps"
+    },
+    {
+      "id": "nypl_maccoun_1909_manhattan",
+      "url": "https://old-digitalcollections.nypl.org/items/97ee6342-cec2-2699-e040-e00a18067566",
+      "publication_year": 1909,
+      "locator": "map: 1609 The island of Manhattan; image ID ps_map_cd3_36",
+      "source_kind": "retrospective_historical_map"
+    }
+  ],
+  "features": [
+    {
+      "id": "maiden_lane_stream",
+      "kind": "stream",
+      "name": "Maiden Lane stream (reconstructed)",
+      "depicted_year": 1609,
+      "evidence_class": "retrospective_reconstruction",
+      "confidence": "low",
+      "geometry": null,
+      "location_description": "Reported as following approximately present-day Maiden Lane from west toward the East River. Not a surveyed course.",
+      "source_ids": ["nyc_lpc_corbin_2010_p9", "nypl_maccoun_1909_manhattan"],
+      "relations": [{"type": "flows_to", "target": "east_river"}]
+    },
+    {
+      "id": "william_street_tributary",
+      "kind": "stream",
+      "name": "William Street-area tributary (reconstructed)",
+      "depicted_year": 1609,
+      "evidence_class": "retrospective_reconstruction",
+      "confidence": "low",
+      "geometry": null,
+      "location_description": "Reconstructed as moving south near present-day William Street and joining the Maiden Lane stream near their present-day intersection. Not a surveyed confluence.",
+      "source_ids": ["nyc_lpc_corbin_2010_p9", "nypl_maccoun_1909_manhattan"],
+      "relations": [{"type": "flows_to", "target": "maiden_lane_stream"}]
+    }
+  ]
+}
