@@ -34,6 +34,14 @@ jobs:
           assert m['is_1609_reconstruction'] is False
           print('Validated authentic archival preview; no georeferenced features claimed')
           PY
+      - name: Attempt full-resolution NYPL scan (non-blocking availability probe)
+        run: |
+          if na1609 fetch-archival-map --quality original --output data/raw/nypl_maccoun_1909_original.jpg; then
+            na1609 inspect-archival-map --input data/raw/nypl_maccoun_1909_original.jpg
+            echo 'Original NYPL source retrieved and verified'
+          else
+            echo 'NYPL original image endpoint unavailable; no fallback or high-resolution claim' >&2
+          fi
       - uses: actions/upload-artifact@v4
         if: success()
         with:
@@ -41,4 +49,6 @@ jobs:
           path: |
             data/raw/nypl_maccoun_1909_preview.jpg
             data/raw/nypl_maccoun_1909_preview.manifest.json
+            data/raw/nypl_maccoun_1909_original.jpg
+            data/raw/nypl_maccoun_1909_original.manifest.json
           retention-days: 7
