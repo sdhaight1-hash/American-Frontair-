@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 import pytest
+from PIL import Image
 from pyproj import Transformer
 
 from na1609.geo import sha256_file
@@ -111,7 +112,8 @@ def pixel_inputs(tmp_path, *, offset_holdout=False):
     config.update({"image_width": 1000, "image_height": 1000,
                    "control_points": controls, "max_holdout_error_m": 25.0,
                    "source_image": "synthetic_map.png"})
-    (tmp_path / "synthetic_map.png").write_bytes(b"test-only synthetic bytes")
+    Image.new("RGB", (1000, 1000), (220, 200, 150)).save(tmp_path / "synthetic_map.png")
+    config["source_image_sha256"] = sha256_file(tmp_path / "synthetic_map.png")
     src, meta_file = inputs(tmp_path, coordinates=[[460, 450], [520, 510]], metadata=config)
     return src, meta_file
 
@@ -132,6 +134,33 @@ def test_pixel_registration_with_independent_holdout(tmp_path):
 def test_pixel_registration_rejects_bad_holdout(tmp_path):
     src, metadata = pixel_inputs(tmp_path, offset_holdout=True)
     with pytest.raises(ValueError, match="holdout registration error"):
+        ingest_historical_water(REGION, src, metadata, tmp_path / "candidate.geojson")
+
+
+def test_pixel_registration_rejects_mismatched_source_scan_hash(tmp_path):
+    src, metadata = pixel_inputs(tmp_path)
+    settings = json.loads(metadata.read_text())
+    settings["source_image_sha256"] = "0" * 64
+    metadata.write_text(json.dumps(settings))
+    with pytest.raises(ValueError, match="source_image_sha256"):
+        ingest_historical_water(REGION, src, metadata, tmp_path / "candidate.geojson")
+
+
+def test_pixel_registration_rejects_missing_scan_hash(tmp_path):
+    src, metadata = pixel_inputs(tmp_path)
+    settings = json.loads(metadata.read_text())
+    settings.pop("source_image_sha256")
+    metadata.write_text(json.dumps(settings))
+    with pytest.raises(ValueError, match="source_image_sha256"):
+        ingest_historical_water(REGION, src, metadata, tmp_path / "candidate.geojson")
+
+
+def test_pixel_registration_rejects_wrong_actual_image_dimensions(tmp_path):
+    src, metadata = pixel_inputs(tmp_path)
+    settings = json.loads(metadata.read_text())
+    settings["image_width"] = 2000
+    metadata.write_text(json.dumps(settings))
+    with pytest.raises(ValueError, match="dimensions differ"):
         ingest_historical_water(REGION, src, metadata, tmp_path / "candidate.geojson")
 
 

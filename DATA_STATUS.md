@@ -51,5 +51,10 @@ Implemented an optional, separately namespaced USGS NHDPlusV2 graph importer; au
 
 ### Real archive download validated (GitHub Actions)
 
-- NYPL `ps_map_cd3_36` preview downloaded: JPEG **757×213**, **240,263 bytes**, SHA-256 `33cba617bf62ab0b7d629322ca307e0678b6db9f8cf9d0c88c64e47c0c333900`.
-- See `docs/nypl_maccoun_scan_qa.md` and successful CI run 43101814395. This is an authentic public-domain archival **preview**, not georeferenced historical game-world geometry.
+- NYPL `ps_map_cd3_36` preview downloaded successfully: JPEG **757×213**, **240,263 bytes**, SHA-256 `33cba617bf62ab0b7d629322ca307e0678b6db9f8cf9d0c88c64e47c0c333900`.
+- See `docs/nypl_maccoun_scan_qa.md` and CI run `43101814395` for evidence. It is an authentic public-domain archival **preview**, not a georeferenced 1609 game-world shoreline.
+
+### High-resolution historical map obtained
+
+- Original MacCoun 1909 NYPL scan downloaded and verified by CI: **7004×1970 JPEG**, 2,159,834 bytes, SHA-256 `57fc9c31128bfbfd1fc9928f6e6b295940001c22faa04b8cd196e5229caca00a`.
+- Registration template created with verified image identity and empty controls; **no fictitious georeferencing or historic geometry**. Image-pixel importer now requires exact source hash and matching actual image dimensions.

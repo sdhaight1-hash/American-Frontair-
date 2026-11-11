@@ -22,7 +22,7 @@
 
 ## Metadata contract
 
-JSON fields: `source_id`, `source_url`, `source_publication_year`, `historical_interval: [start,end]`, `evidence_locator`, `rights_basis`, `redistribution_allowed`, `coordinate_space` (`wgs84` or `image_pixels`), and `horizontal_uncertainty_m` (conservative positive estimate). For pixels, also supply `source_image` relative to metadata, `image_width`, `image_height`, `control_points`, and `max_holdout_error_m`.
+JSON fields: `source_id`, `source_url`, `source_publication_year`, `historical_interval: [start,end]`, `evidence_locator`, `rights_basis`, `redistribution_allowed`, `coordinate_space` (`wgs84` or `image_pixels`), and `horizontal_uncertainty_m` (conservative positive estimate). For pixels, also supply `source_image` relative to metadata, mandatory `source_image_sha256`, actual `image_width` and `image_height`, `control_points`, and `max_holdout_error_m`. Both image hash and raster dimensions must match the archived scan or the candidate is rejected.
 
 The `redistribution_allowed` flag is a **researcher's signed-off assertion**, not a legal certification produced by the code. Never set it to true merely because data can be viewed online.
 

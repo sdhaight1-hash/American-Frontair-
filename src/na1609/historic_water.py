@@ -131,6 +131,20 @@ def ingest_historical_water(region: dict, source: Path, metadata_path: Path, out
         if not image_path.is_file():
             raise FileNotFoundError(image_path)
         image_sha = sha256_file(image_path)
+        if meta.get("source_image_sha256") != image_sha:
+            raise ValueError("historical source_image_sha256 missing or mismatched; scan identity not verified")
+        # Image-pixel traces must refer to the exact dimensions of the *actual*
+        # archived raster, not an asserted canvas size in a metadata file.
+        from PIL import Image, UnidentifiedImageError
+        try:
+            with Image.open(image_path) as im:
+                im.verify()
+            with Image.open(image_path) as im:
+                actual_dimensions = im.size
+        except (OSError, UnidentifiedImageError) as exc:
+            raise ValueError("historic source_image is not a readable raster") from exc
+        if actual_dimensions != (meta["image_width"], meta["image_height"]):
+            raise ValueError("source_image dimensions differ from georeferencing control canvas")
     else:
         image_sha = None
     raw = json.loads(source.read_text(encoding="utf-8"))
