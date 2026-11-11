@@ -48,3 +48,8 @@ Implemented an optional, separately namespaced USGS NHDPlusV2 graph importer; au
 - Added fail-closed preservation (no overwrite, invalid raster rejection, no silent original-to-preview substitution, explicit low-resolution-preview flag).
 - Added independent preview acquisition GitHub workflow and nine synthetic-image regression tests. This is an archival **source**, not yet a historical shoreline, georeferenced map, or 1609 simulation state.
 - Before incorporating a single waterway polyline, we still need a detailed image source, independent georeferencing controls, actual feature tracing, and historical-position validation.
+
+### Real archive download validated (GitHub Actions)
+
+- NYPL `ps_map_cd3_36` preview downloaded: JPEG **757×213**, **240,263 bytes**, SHA-256 `33cba617bf62ab0b7d629322ca307e0678b6db9f8cf9d0c88c64e47c0c333900`.
+- See `docs/nypl_maccoun_scan_qa.md` and successful CI run 43101814395. This is an authentic public-domain archival **preview**, not georeferenced historical game-world geometry.
